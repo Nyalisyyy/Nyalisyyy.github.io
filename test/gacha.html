@@ -19,6 +19,15 @@
     <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700&display=swap" rel="stylesheet">
 
     <style>
+        /* ▼ ここから追加した修正コード ▼ */
+        html {
+            box-sizing: border-box;
+        }
+        *, *:before, *:after {
+            box-sizing: inherit;
+        }
+        /* ▲ ここまで追加した修正コード ▲ */
+
         :root {
             --purple-light: #d2baff; --purple-mid: #a78bfa; --purple-dark: #8e7de4;
             --blue-light: #bde0fe; --blue-dark: #88a4e8;
@@ -45,7 +54,7 @@
         .scrollable-list::-webkit-scrollbar { width: 8px; }
         .scrollable-list::-webkit-scrollbar-thumb { background: #ccc; border-radius: 10px; }
         .btn { padding: 12px 18px; border: none; border-radius: 10px; cursor: pointer; font-weight: 700; transition: all 0.3s; font-family: 'M PLUS Rounded 1c', sans-serif; text-decoration: none; display: inline-block; text-align:center; }
-        input[type="text"], input[type="number"] { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; font-family: 'M PLUS Rounded 1c', sans-serif; }
+        input[type="text"], input[type="number"] { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; font-family: 'M PLUS Rounded 1c', sans-serif; }
 
         /* --- 設定エリア --- */
         #settings-area { min-width: 320px; }
