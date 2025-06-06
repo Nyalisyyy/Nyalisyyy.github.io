@@ -194,7 +194,6 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const getEl = (id) => document.getElementById(id);
-            // ... (要素取得のコードは長いため省略)
             const itemForm = getEl('item-form'), itemNameInput = getEl('item-name-input'), itemRarityInput = getEl('item-rarity-input'),
                   itemWeightInput = getEl('item-weight-input'), itemDescInput = getEl('item-desc-input'),
                   hashtagInput = getEl('hashtag-input'), drawerNameInput = getEl('drawer-name-input'),
@@ -228,11 +227,8 @@
                 const map = new Map();
                 results.forEach(item => {
                     const key = item.name;
-                    if (map.has(key)) {
-                        map.get(key).count++;
-                    } else {
-                        map.set(key, { item: item, count: 1 });
-                    }
+                    if (map.has(key)) { map.get(key).count++; } 
+                    else { map.set(key, { item: item, count: 1 }); }
                 });
                 return Array.from(map.values());
             };
@@ -288,7 +284,6 @@
             const renderHistory = () => {
                 historyList.innerHTML = '';
                 const filteredHistory = (activeHistoryTab === 'all') ? gachaHistory : gachaHistory.filter(entry => entry.drawerName === activeHistoryTab);
-                
                 [...filteredHistory].reverse().forEach((session) => {
                     const originalIndex = gachaHistory.findIndex(s => s.timestamp === session.timestamp);
                     const sessionLi = document.createElement('li');
@@ -300,7 +295,6 @@
                         contentHTML += `<li>${item.rarity ? `[${item.rarity}]` : ''} ${item.name} ${count > 1 ? `<b>×${count}</b>` : ''}</li>`;
                     });
                     contentHTML += '</ul>';
-
                     sessionLi.innerHTML = `
                         <div class="history-item-header">
                             <span class="history-drawer-name">${session.drawerName || 'ゲスト'} さん (${session.results.length}連)</span>
@@ -316,7 +310,6 @@
 
             const renderAll = () => { renderItems(); renderHistoryTabs(); renderHistory(); };
             
-            // --- イベントリスナー ---
             itemForm.addEventListener('submit', e => {
                 e.preventDefault();
                 gachaItems.push({ name: itemNameInput.value, rarity: itemRarityInput.value, weight: parseInt(itemWeightInput.value, 10) || 1, description: itemDescInput.value });
@@ -325,8 +318,7 @@
                 itemForm.reset();
             });
 
-            hashtagInput.addEventListener('change', saveSettings);
-            drawerNameInput.addEventListener('change', saveSettings);
+            [hashtagInput, drawerNameInput].forEach(input => input.addEventListener('change', saveSettings));
 
             itemList.addEventListener('click', e => {
                 if (e.target.classList.contains('delete-btn')) {
@@ -345,9 +337,7 @@
                             gachaItems[index].weight = weightValue;
                             save('myGachaItems_v7', gachaItems);
                             renderItems();
-                        } else {
-                            alert('有効な正の整数を入力してください。');
-                        }
+                        } else { alert('有効な正の整数を入力してください。'); }
                     }
                 }
             });
@@ -365,7 +355,6 @@
             });
 
             gachaButton.addEventListener('click', () => {
-                // ... (ガチャボタンのロジックは長いため省略、変更なし)
                 if (gachaItems.length === 0) { alert('景品が設定されていません！'); return; }
                 const drawCount = parseInt(drawCountInput.value, 10);
                 const drawerName = drawerNameInput.value.trim() || 'ゲスト';
@@ -402,15 +391,12 @@
                         ul.className = 'result-summary-list scrollable-list';
                         consolidated.forEach(({ item, count }) => {
                             const li = document.createElement('li');
-                            li.innerHTML = `<span class="result-rarity">${item.rarity || 'N'}</span>
-                                          <span class="result-item-name">${item.name}</span>
-                                          ${count > 1 ? `<span class="result-count">×${count}</span>` : ''}`;
+                            li.innerHTML = `<span class="result-rarity">${item.rarity || 'N'}</span><span class="result-item-name">${item.name}</span>${count > 1 ? `<span class="result-count">×${count}</span>` : ''}`;
                             ul.appendChild(li);
                         });
                         resultDisplay.appendChild(ul);
                     }
-                    lastResultText = `${drawerName}さんのガチャ結果 (${results.length}連)\n✨結果✨\n` 
-                        + consolidated.map(({item, count}) => `${item.rarity ? `[${item.rarity}]` : ''} ${item.name} ${count > 1 ? `×${count}` : ''}`).join('\n');
+                    lastResultText = `${drawerName}さんのガチャ結果 (${results.length}連)\n✨結果✨\n` + consolidated.map(({item, count}) => `${item.rarity ? `[${item.rarity}]` : ''} ${item.name} ${count > 1 ? `×${count}` : ''}`).join('\n');
                     const hashtags = hashtagInput.value.replace(/#/g, '');
                     const tweetUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(lastResultText)}&hashtags=${encodeURIComponent(hashtags)}`;
                     tweetBtn.href = tweetUrl;
@@ -488,12 +474,22 @@
 
             exportBtn.addEventListener('click', () => {
                 if(gachaItems.length === 0) { alert('保存する景品がありません。'); return; }
+
+                const defaultName = `gacha-settings-${new Date().toISOString().slice(0, 10)}`;
+                const fileName = prompt("保存するファイル名を入力してください（.jsonは自動で付きます）", defaultName);
+
+                if (fileName === null || fileName.trim() === "") {
+                    alert("ファイル名が空のため、保存を中止しました。");
+                    return;
+                }
+
+                const finalFileName = fileName.replace(/\.json$/i, "").trim() + ".json";
                 const jsonString = JSON.stringify(gachaItems, null, 2);
                 const blob = new Blob([jsonString], { type: 'application/json' });
                 const link = document.createElement("a");
                 const url = URL.createObjectURL(blob);
                 link.setAttribute("href", url);
-                link.setAttribute("download", 'gacha-settings.json');
+                link.setAttribute("download", finalFileName);
                 link.style.visibility = 'hidden';
                 document.body.appendChild(link);
                 link.click();
@@ -507,13 +503,11 @@
             importFileInput.addEventListener('change', (event) => {
                 const file = event.target.files[0];
                 if (!file) return;
-
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     try {
                         const importedItems = JSON.parse(e.target.result);
                         if (!Array.isArray(importedItems)) throw new Error('データが配列ではありません。');
-
                         if (confirm('現在の景品リストをインポートした内容で上書きします。よろしいですか？')) {
                             gachaItems = importedItems;
                             save('myGachaItems_v7', gachaItems);
@@ -527,7 +521,7 @@
                     }
                 };
                 reader.readAsText(file);
-            });
+});
 
             loadAll();
         });
