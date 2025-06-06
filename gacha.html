@@ -63,7 +63,8 @@
         .item-controls { text-align: right; }
         .item-stats { font-size: 0.9em; font-weight: 700; }
         .item-stats .prob { color: var(--blue-dark); }
-        .item-stats .weight { color: var(--text-light); margin-left: 8px; }
+        .item-stats .weight { color: var(--text-light); margin-left: 8px; cursor: pointer; text-decoration: underline dotted; }
+        .item-stats .weight:hover { color: var(--purple-dark); }
         .delete-btn { background-color: #ffb6c1; color: white; border-radius: 50%; width: 28px; height: 28px; cursor: pointer; font-weight: 700; border: none; font-size: 14px; margin-top: 5px; }
 
         /* --- ガチャエリア --- */
@@ -92,9 +93,12 @@
         .history-item-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
         .history-drawer-name { font-weight: 700; color: var(--purple-dark); }
         .history-timestamp { font-size: 12px; color: var(--text-light); }
-        .history-item-content { padding-left: 10px; }
+        .history-item-content { padding-left: 10px; list-style-type: none; }
         .history-item-content li { margin-bottom: 4px; }
-
+        .history-copy-btn { background: none; border: none; cursor: pointer; font-size: 20px; padding: 0 5px; }
+        .history-actions { display: flex; gap: 10px; margin-top: 15px; }
+        #export-csv-btn { background-color: #8f9da8; color: white; flex-grow: 1; }
+        #export-csv-btn:hover { background-color: #7a8894; }
 
         /* --- フッター --- */
         footer {
@@ -164,7 +168,10 @@
         <h2>ガチャ履歴 📜</h2>
         <div id="history-tabs"></div>
         <ul id="history-list" class="scrollable-list"></ul>
-        <button id="clear-history-btn" class="btn btn-clear" style="margin-top:15px;">履歴をリセット</button>
+        <div class="history-actions">
+            <button id="export-csv-btn" class="btn">履歴をCSV出力</button>
+            <button id="clear-history-btn" class="btn btn-clear">履歴をリセット</button>
+        </div>
     </div>
 
     <footer>
@@ -181,7 +188,7 @@
                   resultDisplay = getEl('result-display'), drawCountInput = getEl('draw-count'), historyList = getEl('history-list'),
                   clearHistoryBtn = getEl('clear-history-btn'), resultActions = getEl('result-actions'), copyBtn = getEl('copy-btn'), 
                   tweetBtn = getEl('tweet-btn'), itemListHeader = getEl('item-list-header'), toggleItemsBtn = getEl('toggle-items-btn'),
-                  historyTabs = getEl('history-tabs'), raritySuggestions = getEl('rarity-suggestions');
+                  historyTabs = getEl('history-tabs'), raritySuggestions = getEl('rarity-suggestions'), exportCsvBtn = getEl('export-csv-btn');
 
             let gachaItems = [], gachaHistory = [], lastResultText = '', activeHistoryTab = 'all';
 
@@ -205,7 +212,7 @@
             const consolidateResults = (results) => {
                 const map = new Map();
                 results.forEach(item => {
-                    const key = item.name; //
+                    const key = item.name;
                     if (map.has(key)) {
                         map.get(key).count++;
                     } else {
@@ -237,7 +244,10 @@
                             <span class="details">${item.rarity ? `[${item.rarity}]` : ''} ${item.description || ''}</span>
                         </div>
                         <div class="item-controls">
-                            <div class="item-stats"><span class="prob">${probability}%</span><span class="weight">出やすさ: ${item.weight}</span></div>
+                            <div class="item-stats">
+                                <span class="prob">${probability}%</span>
+                                <span class="weight" data-index="${index}">出やすさ: ${item.weight}</span>
+                            </div>
                             <button class="delete-btn" data-index="${index}">×</button>
                         </div>`;
                     itemList.appendChild(li);
@@ -262,15 +272,12 @@
 
             const renderHistory = () => {
                 historyList.innerHTML = '';
-                const filteredHistory = (activeHistoryTab === 'all')
-                    ? gachaHistory
-                    : gachaHistory.filter(entry => entry.drawerName === activeHistoryTab);
-                
-                [...filteredHistory].reverse().forEach(session => {
+                const filteredHistory = (activeHistoryTab === 'all') ? gachaHistory : gachaHistory.filter(entry => entry.drawerName === activeHistoryTab);
+                [...filteredHistory].reverse().forEach((session, i) => {
+                    const originalIndex = gachaHistory.findIndex(s => s.timestamp === session.timestamp);
                     const sessionLi = document.createElement('li');
                     const d = new Date(session.timestamp);
                     const timeString = `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
-                    
                     const consolidated = consolidateResults(session.results);
                     let contentHTML = '<ul class="history-item-content">';
                     consolidated.forEach(({item, count}) => {
@@ -281,7 +288,10 @@
                     sessionLi.innerHTML = `
                         <div class="history-item-header">
                             <span class="history-drawer-name">${session.drawerName || 'ゲスト'} さん (${session.results.length}連)</span>
-                            <span class="history-timestamp">${d.toLocaleDateString()} ${timeString}</span>
+                            <div>
+                                <span class="history-timestamp">${d.toLocaleDateString()} ${timeString}</span>
+                                <button class="history-copy-btn" data-index="${originalIndex}">📋</button>
+                            </div>
                         </div>
                         ${contentHTML}`;
                     historyList.appendChild(sessionLi);
@@ -303,26 +313,37 @@
 
             itemList.addEventListener('click', e => {
                 if (e.target.classList.contains('delete-btn')) {
-                    gachaItems.splice(e.target.dataset.index, 1);
+                    const index = e.target.dataset.index;
+                    gachaItems.splice(index, 1);
                     save('myGachaItems_v7', gachaItems);
                     renderItems();
+                }
+                if (e.target.classList.contains('weight')) {
+                    const index = e.target.dataset.index;
+                    const item = gachaItems[index];
+                    const newWeight = prompt(`「${item.name}」の新しい「出やすさ」を入力してください。`, item.weight);
+                    if (newWeight !== null) {
+                        const weightValue = parseInt(newWeight, 10);
+                        if (!isNaN(weightValue) && weightValue > 0) {
+                            gachaItems[index].weight = weightValue;
+                            save('myGachaItems_v7', gachaItems);
+                            renderItems();
+                        } else {
+                            alert('有効な正の整数を入力してください。');
+                        }
+                    }
                 }
             });
 
             clearItemsBtn.addEventListener('click', () => {
                 if (gachaItems.length > 0 && confirm('景品リストをすべて削除しますか？')) {
-                    gachaItems = [];
-                    save('myGachaItems_v7', gachaItems);
-                    renderItems();
+                    gachaItems = []; save('myGachaItems_v7', gachaItems); renderItems();
                 }
             });
             
             clearHistoryBtn.addEventListener('click', () => {
                 if (gachaHistory.length > 0 && confirm('ガチャ履歴をすべて削除しますか？')) {
-                    gachaHistory = [];
-                    activeHistoryTab = 'all';
-                    save('myGachaHistory_v7', gachaHistory);
-                    renderAll();
+                    gachaHistory = []; activeHistoryTab = 'all'; save('myGachaHistory_v7', gachaHistory); renderAll();
                 }
             });
 
@@ -408,6 +429,51 @@
                     e.target.classList.add('active');
                     renderHistory();
                 }
+            });
+
+            historyList.addEventListener('click', (e) => {
+                if(e.target.classList.contains('history-copy-btn')) {
+                    const button = e.target;
+                    const index = button.dataset.index;
+                    const session = gachaHistory[index];
+                    if (!session) return;
+                    const d = new Date(session.timestamp);
+                    const timeString = `${d.toLocaleDateString()} ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
+                    const consolidated = consolidateResults(session.results);
+                    let textToCopy = `ガチャ履歴\n引いた人: ${session.drawerName || 'ゲスト'} さん\n日時: ${timeString}\n---結果(${session.results.length}連)---\n`
+                        + consolidated.map(({item, count}) => `${item.rarity ? `[${item.rarity}]` : ''} ${item.name} ${count > 1 ? `×${count}` : ''}`).join('\n');
+                    navigator.clipboard.writeText(textToCopy).then(() => {
+                        const originalIcon = button.textContent;
+                        button.textContent = '✅';
+                        setTimeout(() => { button.textContent = originalIcon; }, 2000);
+                    });
+                }
+            });
+
+            exportCsvBtn.addEventListener('click', () => {
+                if (gachaHistory.length === 0) { alert('エクスポートする履歴がありません。'); return; }
+                const headers = ['"日時"', '"名前"', '"レアリティ"', '"景品名"', '"説明"'];
+                let csvContent = headers.join(',') + '\n';
+                gachaHistory.forEach(session => {
+                    const d = new Date(session.timestamp);
+                    const timeString = `${d.getFullYear()}-${(d.getMonth()+1).toString().padStart(2,'0')}-${d.getDate().toString().padStart(2,'0')} ${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
+                    session.results.forEach(item => {
+                        const row = [timeString, session.drawerName, item.rarity || '', item.name, item.description || ''].map(val => `"${val.replace(/"/g, '""')}"`).join(',');
+                        csvContent += row + '\n';
+                    });
+                });
+                
+                const bom = new Uint8Array([0xEF, 0xBB, 0xBF]);
+                const blob = new Blob([bom, csvContent], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement("a");
+                const url = URL.createObjectURL(blob);
+                link.setAttribute("href", url);
+                const date = new Date().toISOString().slice(0, 10);
+                link.setAttribute("download", `gacha_history_${date}.csv`);
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
             });
 
             loadAll();
