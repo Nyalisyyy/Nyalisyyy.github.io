@@ -1,0 +1,89 @@
+/* 全体のスタイル */
+body {
+    background-color: #a7d8e8; /* 基調色のパステルブルー */
+    font-family: 'Yusei Magic', sans-serif; /* ポップでかわいいフォント */
+    color: #333;
+    margin: 0;
+    padding: 0;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+/* ヘッダーのスタイル */
+header {
+    background-color: #d8b5e9; /* サブカラーのパステルパープル */
+    padding: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px; /* ロゴと文字の間隔 */
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.logo {
+    height: 50px; /* ロゴの高さを50pxに設定 */
+}
+
+header h1 {
+    margin: 0;
+    color: white;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+}
+
+/* メインコンテンツのスタイル */
+main {
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.gacha-section {
+    background-color: white;
+    padding: 30px 40px;
+    border-radius: 20px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.gacha-section h2 {
+    color: #d8b5e9;
+    margin-top: 0;
+}
+
+/* ガチャボタンのスタイル */
+.gacha-button {
+    display: inline-block;
+    background-color: #d8b5e9;
+    color: white;
+    padding: 15px 30px;
+    text-decoration: none;
+    border-radius: 50px; /* 角を丸くして可愛い感じに */
+    font-weight: bold;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    transition: transform 0.2s, background-color 0.2s;
+}
+
+.gacha-button:hover {
+    background-color: #c9a0dc; /* ホバー時にもう少し濃い紫に */
+    transform: scale(1.05); /* 少し大きくする */
+}
+
+/* フッターのスタイル */
+footer {
+    background-color: #d8b5e9;
+    color: white;
+    padding: 10px 0;
+    width: 100%;
+}
+
+footer a {
+    color: white;
+    text-decoration: none;
+}
+
+footer a:hover {
+    text-decoration: underline;
+}
