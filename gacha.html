@@ -13,6 +13,7 @@
     <meta property="og:type" content="website">
     <meta name="twitter:card" content="summary">
     <meta name="twitter:creator" content="@Nyalisyyy">
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700&display=swap" rel="stylesheet">
@@ -77,6 +78,7 @@
         .result-item .item-description { font-size: 16px; color: #666; margin-top: 15px; }
         .result-summary-list li { background: #fff; border-radius: 10px; padding: 10px 15px; margin-bottom: 8px; font-size: 18px; display: flex; align-items: center; gap: 10px; }
         .result-rarity { font-weight: 700; color: var(--purple-mid); padding: 3px 8px; border-radius: 5px; background: #efebff; }
+        .result-count { font-weight: 700; color: var(--orange-end); margin-left: auto; }
         #result-actions { display: none; gap: 10px; margin-top: 15px; width: 100%; }
         #copy-btn { background-color: var(--blue-dark); color: white; flex-grow: 1; }
         #tweet-btn { background-color: var(--twitter-blue); color: white; flex-grow: 1; }
@@ -86,11 +88,13 @@
         #history-tabs { display: flex; flex-wrap: wrap; gap: 8px; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 10px; }
         .tab-btn { background-color: #e9e9f0; color: var(--text-dark); }
         .tab-btn.active { background-color: var(--purple-mid); color: white; }
-        #history-list li { background-color: #f7f7fa; padding: 10px 15px; border-radius: 8px; margin-bottom: 8px; }
-        .history-item-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+        #history-list > li { background-color: #f7f7fa; padding: 10px 15px; border-radius: 8px; margin-bottom: 12px; }
+        .history-item-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
         .history-drawer-name { font-weight: 700; color: var(--purple-dark); }
         .history-timestamp { font-size: 12px; color: var(--text-light); }
         .history-item-content { padding-left: 10px; }
+        .history-item-content li { margin-bottom: 4px; }
+
 
         /* --- フッター --- */
         footer {
@@ -185,9 +189,9 @@
             const load = (key, defaultValue) => JSON.parse(localStorage.getItem(key)) || defaultValue;
 
             const loadAll = () => {
-                gachaItems = load('myGachaItems_v6', []);
-                gachaHistory = load('myGachaHistory_v6', []);
-                const settings = load('myGachaSettings_v6', { hashtag: '', drawerName: '' });
+                gachaItems = load('myGachaItems_v7', []);
+                gachaHistory = load('myGachaHistory_v7', []);
+                const settings = load('myGachaSettings_v7', { hashtag: '', drawerName: '' });
                 hashtagInput.value = settings.hashtag;
                 drawerNameInput.value = settings.drawerName;
                 renderAll();
@@ -195,7 +199,20 @@
             
             const saveSettings = () => {
                 const settings = { hashtag: hashtagInput.value, drawerName: drawerNameInput.value };
-                save('myGachaSettings_v6', settings);
+                save('myGachaSettings_v7', settings);
+            };
+
+            const consolidateResults = (results) => {
+                const map = new Map();
+                results.forEach(item => {
+                    const key = item.name; //
+                    if (map.has(key)) {
+                        map.get(key).count++;
+                    } else {
+                        map.set(key, { item: item, count: 1 });
+                    }
+                });
+                return Array.from(map.values());
             };
 
             const renderRaritySuggestions = () => {
@@ -248,17 +265,26 @@
                 const filteredHistory = (activeHistoryTab === 'all')
                     ? gachaHistory
                     : gachaHistory.filter(entry => entry.drawerName === activeHistoryTab);
-                [...filteredHistory].reverse().forEach(entry => {
-                    const li = document.createElement('li');
-                    const d = new Date(entry.timestamp);
+                
+                [...filteredHistory].reverse().forEach(session => {
+                    const sessionLi = document.createElement('li');
+                    const d = new Date(session.timestamp);
                     const timeString = `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
-                    li.innerHTML = `
+                    
+                    const consolidated = consolidateResults(session.results);
+                    let contentHTML = '<ul class="history-item-content">';
+                    consolidated.forEach(({item, count}) => {
+                        contentHTML += `<li>${item.rarity ? `[${item.rarity}]` : ''} ${item.name} ${count > 1 ? `<b>×${count}</b>` : ''}</li>`;
+                    });
+                    contentHTML += '</ul>';
+
+                    sessionLi.innerHTML = `
                         <div class="history-item-header">
-                            <span class="history-drawer-name">${entry.drawerName || 'ゲスト'} さん</span>
+                            <span class="history-drawer-name">${session.drawerName || 'ゲスト'} さん (${session.results.length}連)</span>
                             <span class="history-timestamp">${d.toLocaleDateString()} ${timeString}</span>
                         </div>
-                        <div class="history-item-content">${entry.item.rarity ? `[${entry.item.rarity}]` : ''} ${entry.item.name}</div>`;
-                    historyList.appendChild(li);
+                        ${contentHTML}`;
+                    historyList.appendChild(sessionLi);
                 });
             };
 
@@ -267,7 +293,7 @@
             itemForm.addEventListener('submit', e => {
                 e.preventDefault();
                 gachaItems.push({ name: itemNameInput.value, rarity: itemRarityInput.value, weight: parseInt(itemWeightInput.value, 10) || 1, description: itemDescInput.value });
-                save('myGachaItems_v6', gachaItems);
+                save('myGachaItems_v7', gachaItems);
                 renderItems();
                 itemForm.reset();
             });
@@ -278,7 +304,7 @@
             itemList.addEventListener('click', e => {
                 if (e.target.classList.contains('delete-btn')) {
                     gachaItems.splice(e.target.dataset.index, 1);
-                    save('myGachaItems_v6', gachaItems);
+                    save('myGachaItems_v7', gachaItems);
                     renderItems();
                 }
             });
@@ -286,7 +312,7 @@
             clearItemsBtn.addEventListener('click', () => {
                 if (gachaItems.length > 0 && confirm('景品リストをすべて削除しますか？')) {
                     gachaItems = [];
-                    save('myGachaItems_v6', gachaItems);
+                    save('myGachaItems_v7', gachaItems);
                     renderItems();
                 }
             });
@@ -295,7 +321,7 @@
                 if (gachaHistory.length > 0 && confirm('ガチャ履歴をすべて削除しますか？')) {
                     gachaHistory = [];
                     activeHistoryTab = 'all';
-                    save('myGachaHistory_v6', gachaHistory);
+                    save('myGachaHistory_v7', gachaHistory);
                     renderAll();
                 }
             });
@@ -321,15 +347,17 @@
                             random -= item.weight;
                         }
                         results.push(selectedItem);
-                        gachaHistory.push({ item: selectedItem, timestamp: new Date().toISOString(), drawerName: drawerName });
                     }
                     
-                    save('myGachaHistory_v6', gachaHistory);
+                    gachaHistory.push({ results: results, timestamp: new Date().toISOString(), drawerName: drawerName });
+                    save('myGachaHistory_v7', gachaHistory);
                     renderAll();
                     
                     resultDisplay.innerHTML = '';
+                    const consolidated = consolidateResults(results);
+
                     if (results.length === 1) {
-                        const item = results[0];
+                        const { item } = consolidated[0];
                         resultDisplay.innerHTML = `<div class="result-item">
                             ${item.rarity ? `<span class="rarity">【${item.rarity}】</span>` : ''}
                             <span class="item-name">${item.name}</span>
@@ -338,15 +366,19 @@
                     } else {
                         const ul = document.createElement('ul');
                         ul.className = 'result-summary-list scrollable-list';
-                        results.forEach(item => {
+                        consolidated.forEach(({ item, count }) => {
                             const li = document.createElement('li');
-                            li.innerHTML = `<span class="result-rarity">${item.rarity || 'N'}</span><span class="result-item-name">${item.name}</span>`;
+                            li.innerHTML = `<span class="result-rarity">${item.rarity || 'N'}</span>
+                                          <span class="result-item-name">${item.name}</span>
+                                          ${count > 1 ? `<span class="result-count">×${count}</span>` : ''}`;
                             ul.appendChild(li);
                         });
                         resultDisplay.appendChild(ul);
                     }
-
-                    lastResultText = `${drawerName}さんのガチャ結果 (${results.length}連)\n✨結果✨\n` + results.map(item => `${item.rarity ? `[${item.rarity}]` : ''} ${item.name}`).join('\n');
+                    
+                    lastResultText = `${drawerName}さんのガチャ結果 (${results.length}連)\n✨結果✨\n` 
+                        + consolidated.map(({item, count}) => `${item.rarity ? `[${item.rarity}]` : ''} ${item.name} ${count > 1 ? `×${count}` : ''}`).join('\n');
+                    
                     const hashtags = hashtagInput.value.replace(/#/g, '');
                     const tweetUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(lastResultText)}&hashtags=${encodeURIComponent(hashtags)}`;
                     tweetBtn.href = tweetUrl;
