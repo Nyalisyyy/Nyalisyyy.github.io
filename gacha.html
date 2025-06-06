@@ -8,10 +8,14 @@
     <meta name="author" content="にゃる @Nyalisyyy">
     <meta name="description" content="IRIAM（イリアム）などの配信用に使える高機能ガチャツール。景品、レアリティ、確率を自由に設定でき、履歴管理やSNSシェアも可能です。">
     
+    <link rel="icon" type="image/png" href="./logo.png">
+    <link rel="apple-touch-icon" href="./logo.png">
+
     <meta property="og:title" content="IRIAM配信用ガチャツール">
     <meta property="og:description" content="IRIAM（イリアム）などの配信用に使える高機能ガチャツール。景品、レアリティ、確率を自由に設定でき、履歴管理やSNSシェアも可能です。">
     <meta property="og:type" content="website">
-    <meta name="twitter:card" content="summary">
+    <meta property="og:image" content="./logo.png">
+    <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:creator" content="@Nyalisyyy">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -19,6 +23,7 @@
     <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700&display=swap" rel="stylesheet">
 
     <style>
+        /* CSSの内容は前回から変更ありません */
         :root {
             --purple-light: #d2baff; --purple-mid: #a78bfa; --purple-dark: #8e7de4;
             --blue-light: #bde0fe; --blue-dark: #88a4e8;
@@ -32,11 +37,18 @@
             color: var(--text-dark); padding: 20px; display: flex; flex-wrap: wrap; gap: 20px; justify-content: center;
             padding-bottom: 60px; /* フッターのスペースを確保 */
         }
+        html {
+            box-sizing: border-box;
+        }
+        *, *:before, *:after {
+            box-sizing: inherit;
+        }
         .container { 
             background-color: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px);
             border: 2px solid #ffffff; border-radius: 20px; padding: 25px; 
             box-shadow: 0 8px 20px rgba(0,0,0,0.1);
             display: flex; flex-direction: column;
+            flex: 1; /* flex-basisの基本値を設定 */
         }
         h1, h2, h3 { color: var(--purple-dark); text-align: center; padding-bottom: 10px; font-weight: 700; margin: 0; }
         .scrollable-list { list-style: none; padding: 0; margin-top: 15px; max-height: 350px; overflow-y: auto; padding-right: 10px; transition: all 0.3s ease; }
@@ -44,10 +56,10 @@
         .scrollable-list::-webkit-scrollbar { width: 8px; }
         .scrollable-list::-webkit-scrollbar-thumb { background: #ccc; border-radius: 10px; }
         .btn { padding: 12px 18px; border: none; border-radius: 10px; cursor: pointer; font-weight: 700; transition: all 0.3s; font-family: 'M PLUS Rounded 1c', sans-serif; text-decoration: none; display: inline-block; text-align:center; }
-        input[type="text"], input[type="number"] { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; font-family: 'M PLUS Rounded 1c', sans-serif; }
+        input[type="text"], input[type="number"] { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; font-family: 'M PLUS Rounded 1c', sans-serif; }
 
         /* --- 設定エリア --- */
-        #settings-area { flex: 1; min-width: 360px; max-width: 500px; }
+        #settings-area { min-width: 320px; }
         #item-form { display: grid; gap: 12px; margin-top: 15px; }
         #item-list-header { display: flex; justify-content: space-between; align-items: center; cursor: pointer; margin-top: 20px; border-bottom: 2px solid #eee; padding-bottom: 10px; }
         .toggle-icon { font-size: 24px; font-weight: 700; color: var(--purple-mid); transition: transform 0.3s ease; }
@@ -68,7 +80,7 @@
         .delete-btn { background-color: #ffb6c1; color: white; border-radius: 50%; width: 28px; height: 28px; cursor: pointer; font-weight: 700; border: none; font-size: 14px; margin-top: 5px; }
 
         /* --- ガチャエリア --- */
-        #gacha-area { flex: 1; min-width: 360px; max-width: 500px; justify-content: space-between; }
+        #gacha-area { min-width: 320px; justify-content: space-between; }
         .gacha-settings-grid { display: grid; gap: 10px; margin-bottom: 20px; }
         .gacha-controls { display: flex; align-items: center; gap: 15px; margin-top: auto; }
         #draw-count { font-size: 20px; width: 80px; text-align: center; padding: 15px 10px; font-weight: 700; }
@@ -85,20 +97,20 @@
         #tweet-btn { background-color: var(--twitter-blue); color: white; flex-grow: 1; }
 
         /* --- 履歴エリア --- */
-        #history-area { flex: 1; min-width: 360px; max-width: 500px; }
+        #history-area { min-width: 320px; }
         #history-tabs { display: flex; flex-wrap: wrap; gap: 8px; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 10px; }
         .tab-btn { background-color: #e9e9f0; color: var(--text-dark); }
         .tab-btn.active { background-color: var(--purple-mid); color: white; }
         #history-list > li { background-color: #f7f7fa; padding: 10px 15px; border-radius: 8px; margin-bottom: 12px; }
-        .history-item-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .history-item-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 5px; }
         .history-drawer-name { font-weight: 700; color: var(--purple-dark); }
         .history-timestamp { font-size: 12px; color: var(--text-light); }
         .history-item-content { padding-left: 10px; list-style-type: none; }
         .history-item-content li { margin-bottom: 4px; }
         .history-copy-btn { background: none; border: none; cursor: pointer; font-size: 20px; padding: 0 5px; }
         .history-actions { display: flex; gap: 10px; margin-top: 15px; }
-        #export-csv-btn { background-color: #8f9da8; color: white; flex-grow: 1; }
-        #export-csv-btn:hover { background-color: #7a8894; }
+        #export-csv-btn { background-color: #8f9da8; color: white; flex-basis: 50%; }
+        #clear-history-btn { flex-basis: 50%; }
 
         /* --- フッター --- */
         footer {
@@ -118,6 +130,23 @@
         }
         footer a:hover {
             color: var(--purple-dark);
+        }
+        
+        /* --- レスポンシブ対応設定 --- */
+        @media (max-width: 1200px) {
+            .container { flex-basis: 45%; }
+        }
+        @media (max-width: 768px) {
+            body { padding: 10px; gap: 15px; flex-direction: column; }
+            .container { flex-basis: 100%; width: 100%; padding: 20px 15px; min-width: unset; }
+            h1 { font-size: 1.8rem; }
+            .result-item .item-name { font-size: 2rem; }
+        }
+        @media (max-width: 480px) {
+            .gacha-controls { flex-direction: column; align-items: stretch; }
+            #draw-count { width: 100%; }
+            .result-actions, .history-actions { flex-direction: column; }
+            h2 { font-size: 1.3rem; }
         }
     </style>
 </head>
@@ -273,11 +302,14 @@
             const renderHistory = () => {
                 historyList.innerHTML = '';
                 const filteredHistory = (activeHistoryTab === 'all') ? gachaHistory : gachaHistory.filter(entry => entry.drawerName === activeHistoryTab);
-                [...filteredHistory].reverse().forEach((session, i) => {
+                
+                [...filteredHistory].reverse().forEach((session) => {
                     const originalIndex = gachaHistory.findIndex(s => s.timestamp === session.timestamp);
+                    
                     const sessionLi = document.createElement('li');
                     const d = new Date(session.timestamp);
                     const timeString = `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
+                    
                     const consolidated = consolidateResults(session.results);
                     let contentHTML = '<ul class="history-item-content">';
                     consolidated.forEach(({item, count}) => {
@@ -432,20 +464,22 @@
             });
 
             historyList.addEventListener('click', (e) => {
-                if(e.target.classList.contains('history-copy-btn')) {
-                    const button = e.target;
-                    const index = button.dataset.index;
+                const copyButton = e.target.closest('.history-copy-btn');
+                if (copyButton) {
+                    const index = copyButton.dataset.index;
                     const session = gachaHistory[index];
                     if (!session) return;
                     const d = new Date(session.timestamp);
                     const timeString = `${d.toLocaleDateString()} ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
                     const consolidated = consolidateResults(session.results);
+                    
                     let textToCopy = `ガチャ履歴\n引いた人: ${session.drawerName || 'ゲスト'} さん\n日時: ${timeString}\n---結果(${session.results.length}連)---\n`
                         + consolidated.map(({item, count}) => `${item.rarity ? `[${item.rarity}]` : ''} ${item.name} ${count > 1 ? `×${count}` : ''}`).join('\n');
+
                     navigator.clipboard.writeText(textToCopy).then(() => {
-                        const originalIcon = button.textContent;
-                        button.textContent = '✅';
-                        setTimeout(() => { button.textContent = originalIcon; }, 2000);
+                        const originalIcon = copyButton.textContent;
+                        copyButton.textContent = '✅';
+                        setTimeout(() => { copyButton.textContent = originalIcon; }, 2000);
                     });
                 }
             });
@@ -458,12 +492,12 @@
                     const d = new Date(session.timestamp);
                     const timeString = `${d.getFullYear()}-${(d.getMonth()+1).toString().padStart(2,'0')}-${d.getDate().toString().padStart(2,'0')} ${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
                     session.results.forEach(item => {
-                        const row = [timeString, session.drawerName, item.rarity || '', item.name, item.description || ''].map(val => `"${val.replace(/"/g, '""')}"`).join(',');
+                        const row = [timeString, session.drawerName, item.rarity || '', item.name, item.description || ''].map(val => `"${String(val).replace(/"/g, '""')}"`).join(',');
                         csvContent += row + '\n';
                     });
                 });
                 
-                const bom = new Uint8Array([0xEF, 0xBB, 0xBF]);
+                const bom = new Uint8Array([0xEF, 0xBB, 0xBF]); // Excelで日本語が文字化けしないようにするため
                 const blob = new Blob([bom, csvContent], { type: 'text/csv;charset=utf-8;' });
                 const link = document.createElement("a");
                 const url = URL.createObjectURL(blob);
