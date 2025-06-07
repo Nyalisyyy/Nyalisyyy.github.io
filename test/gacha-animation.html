@@ -10,6 +10,7 @@
     
     <link rel="icon" type="image/png" href="./logo.png">
     <link rel="apple-touch-icon" href="./logo.png">
+
     <meta property="og:title" content="IRIAM配信用ガチャツール">
     <meta property="og:description" content="IRIAM（イリアム）などの配信用に使える高機能ガチャツール。景品、レアリティ、確率を自由に設定でき、履歴管理やSNSシェアも可能です。">
     <meta property="og:type" content="website">
@@ -28,6 +29,7 @@
             --orange-start: #f6d365; --orange-end: #fda085;
             --green-mid: #2ecc71; --gray-dark: #8f9da8;
             --text-dark: #555; --text-light: #777;
+            --twitter-blue: #1DA1F2;
         }
         html { box-sizing: border-box; }
         *, *:before, *:after { box-sizing: inherit; }
@@ -46,39 +48,53 @@
         }
         h1, h2, h3 { color: var(--purple-dark); text-align: center; padding-bottom: 10px; font-weight: 700; margin: 0; }
         .scrollable-list { list-style: none; padding: 0; margin-top: 15px; max-height: 350px; overflow-y: auto; padding-right: 10px; transition: all 0.3s ease; }
+        .hidden { display: none !important; }
+        .scrollable-list.hidden { max-height: 0; overflow: hidden; margin-top: 0; opacity: 0; }
+        .scrollable-list::-webkit-scrollbar { width: 8px; }
+        .scrollable-list::-webkit-scrollbar-thumb { background: #ccc; border-radius: 10px; }
         .btn { padding: 12px 18px; border: none; border-radius: 10px; cursor: pointer; font-weight: 700; transition: all 0.3s; font-family: 'M PLUS Rounded 1c', sans-serif; text-decoration: none; display: inline-block; text-align:center; }
         input[type="text"], input[type="number"] { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; font-family: 'M PLUS Rounded 1c', sans-serif; }
-        .hidden { display: none !important; }
 
         /* --- 設定エリア --- */
         #settings-area { min-width: 320px; }
         .settings-section { border-top: 2px dashed #eee; margin-top: 20px; padding-top: 20px; }
+        .settings-section:first-of-type { border-top: none; margin-top: 0; padding-top: 0; }
         .settings-section h3 { text-align: left; font-size: 1.1rem; padding-bottom: 10px;}
-        .gacha-mode-selector label { margin-right: 15px; }
-        .sub-settings-panel { background: #f0f4ff; padding: 15px; border-radius: 10px; margin-top: 10px;}
+        .gacha-mode-selector label { margin-right: 15px; cursor: pointer; }
+        .sub-settings-panel { background: #f0f4ff; padding: 15px; border-radius: 10px; margin-top: 10px; font-size: 0.9rem; }
+        .sub-settings-panel input { display: inline-block; width: auto; margin-left: 5px;}
         #item-form { display: grid; gap: 12px; margin-top: 15px; }
+        #item-list-header { display: flex; justify-content: space-between; align-items: center; cursor: pointer; margin-top: 20px; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        .toggle-icon { font-size: 24px; font-weight: 700; color: var(--purple-mid); transition: transform 0.3s ease; }
+        .toggle-icon.open { transform: rotate(90deg); }
         .form-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
         .btn-add { background: linear-gradient(45deg, var(--purple-mid), #c1a4ff); color: white; box-shadow: 0 4px 10px rgba(167, 139, 250, 0.3); grid-column: 1 / -1; }
         .btn-io { background-color: var(--green-mid); color: white; }
         .btn-clear { background-color: #c5c5d2; color: white; }
         #item-list li { background-color: #fff; padding: 10px 15px; border-radius: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border-left: 5px solid var(--purple-light); }
         .item-info .name { font-weight: 700; color: #6a5acd; }
+        .item-info .details { font-size: 0.9em; color: var(--text-light); }
         .item-controls { text-align: right; }
-        .item-stats .weight { cursor: pointer; text-decoration: underline dotted; }
-        
+        .item-stats { font-size: 0.9em; font-weight: 700; }
+        .item-stats .prob, .item-stats .stock { color: var(--blue-dark); }
+        .item-stats .weight { color: var(--text-light); margin-left: 8px; cursor: pointer; text-decoration: underline dotted; }
+        .delete-btn { background-color: #ffb6c1; color: white; border-radius: 50%; width: 28px; height: 28px; cursor: pointer; font-weight: 700; border: none; font-size: 14px; margin-top: 5px; }
+
         /* --- ガチャエリア --- */
         #gacha-area { min-width: 320px; justify-content: space-between; }
         .gacha-settings-grid { display: grid; gap: 10px; margin-bottom: 20px; }
-        #pity-counter-display { text-align: center; font-weight: bold; color: var(--purple-dark); margin-bottom: 15px; background: #fff; padding: 10px; border-radius: 10px;}
+        #pity-counter-display { text-align: center; font-weight: bold; color: var(--purple-dark); margin-bottom: 15px; background: #fff8e1; padding: 10px; border-radius: 10px; border: 2px solid var(--orange-start); }
         .gacha-controls { display: flex; align-items: center; gap: 15px; margin-top: auto; }
+        #draw-count { font-size: 20px; width: 80px; text-align: center; padding: 15px 10px; font-weight: 700; }
+        #gacha-button { font-size: 24px; font-weight: 700; padding: 18px 0; background: linear-gradient(45deg, var(--orange-start), var(--orange-end)); color: white; box-shadow: 0 5px 15px rgba(253, 160, 133, 0.4); flex-grow: 1; }
         #result-display { width: 100%; min-height: 200px; text-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center; flex-grow: 1; }
         .result-item .item-name { font-size: 36px; }
         #result-actions { display: none; gap: 10px; margin-top: 15px; margin-bottom: 20px; width: 100%; }
-        
+
         /* --- 履歴エリア --- */
         #history-area { min-width: 320px; }
         .history-actions { display: flex; gap: 10px; margin-top: 15px; }
-        
+
         /* --- フッター --- */
         footer { position: fixed; right: 0; bottom: 0; padding: 10px 15px; background-color: rgba(255, 255, 255, 0.5); backdrop-filter: blur(5px); border-top-left-radius: 10px; }
         footer a { font-size: 14px; color: var(--text-dark); text-decoration: none; font-weight: 700; }
@@ -104,22 +120,20 @@
         <div class="settings-section">
             <h3>ガチャモード</h3>
             <div class="gacha-mode-selector">
-                <input type="radio" id="mode-normal" name="gacha-mode" value="normal" checked> <label for="mode-normal">通常ガチャ</label>
-                <input type="radio" id="mode-ceiling" name="gacha-mode" value="ceiling"> <label for="mode-ceiling">天井機能</label>
-                <input type="radio" id="mode-box" name="gacha-mode" value="box"> <label for="mode-box">BOXガチャ</label>
+                <input type="radio" id="mode-normal" name="gacha-mode" value="normal" checked> <label for="mode-normal">通常</label>
+                <input type="radio" id="mode-ceiling" name="gacha-mode" value="ceiling"> <label for="mode-ceiling">天井</label>
+                <input type="radio" id="mode-box" name="gacha-mode" value="box"> <label for="mode-box">BOX</label>
             </div>
-        </div>
-        
-        <div id="ceiling-settings-panel" class="sub-settings-panel hidden">
-            <h3>天井設定</h3>
-            <label for="ceiling-count">天井カウント:</label> <input type="number" id="ceiling-count" value="100" min="1"> 回
-            <br><br>
-            <label for="ceiling-rarity">対象レアリティ (カンマ区切り):</label> <input type="text" id="ceiling-rarity" placeholder="例: SR,SSR">
-        </div>
+            
+            <div id="ceiling-settings-panel" class="sub-settings-panel hidden">
+                <label for="ceiling-count">天井カウント:</label> <input type="number" id="ceiling-count" value="100" min="1">
+                <br><br>
+                <label for="ceiling-rarity">対象レアリティ (カンマ区切り):</label> <input type="text" id="ceiling-rarity" placeholder="例: SR,SSR">
+            </div>
 
-        <div id="box-settings-panel" class="sub-settings-panel hidden">
-            <h3>BOXガチャ設定</h3>
-            <button id="reset-box-btn" class="btn btn-clear">BOXの在庫をリセット</button>
+            <div id="box-settings-panel" class="sub-settings-panel hidden">
+                <button id="reset-box-btn" class="btn btn-clear">BOXの在庫をリセット</button>
+            </div>
         </div>
 
         <div class="settings-section">
@@ -133,11 +147,12 @@
                 <input type="text" id="item-desc-input" placeholder="景品の説明">
                 <div class="form-buttons">
                     <button type="submit" class="btn btn-add">景品を追加</button>
-                    <button type="button" id="import-btn" class="btn btn-io">設定を読込</button>
-                    <button type="button" id="export-btn" class="btn btn-io">設定を保存</button>
+                    <button type="button" id="import-btn" class="btn btn-io">設定読込</button>
+                    <button type="button" id="export-btn" class="btn btn-io">設定保存</button>
                     <button type="button" id="clear-items-btn" class="btn btn-clear">全削除</button>
                 </div>
             </form>
+            <div id="item-list-header"><h3>景品リスト</h3><span id="toggle-items-btn" class="toggle-icon open">></span></div>
             <ul id="item-list" class="scrollable-list"></ul>
         </div>
     </div>
@@ -153,8 +168,8 @@
         <div id="pity-counter-display" class="hidden"></div>
         <div id="result-display"><p>景品を設定してガチャを回そう！</p></div>
         <div id="result-actions">
-            <button id="copy-btn" class="btn">コピー</button>
-            <a id="tweet-btn" class="btn" href="#">Xでシェア</a>
+             <button id="copy-btn" class="btn">コピー</button>
+             <a id="tweet-btn" class="btn" href="#">Xでシェア</a>
         </div>
         <div class="gacha-controls">
              <input type="number" id="draw-count" value="1" min="1" max="100">
@@ -163,10 +178,20 @@
     </div>
     
     <div id="history-area" class="container">
+        <h2>ガチャ履歴 📜</h2>
+        <div id="history-tabs"></div>
+        <ul id="history-list" class="scrollable-list"></ul>
+        <div class="history-actions">
+            <button id="export-csv-btn" class="btn">履歴をCSV出力</button>
+            <button id="clear-history-btn" class="btn btn-clear">履歴をリセット</button>
         </div>
+    </div>
 
     <div id="animation-overlay" class="hidden">
-        <div class="gacha-capsule"><div class="gacha-capsule-top"></div><div class="gacha-capsule-bottom"><div class="gacha-capsule-star">★</div></div></div>
+        <div class="gacha-capsule">
+            <div class="gacha-capsule-top"></div>
+            <div class="gacha-capsule-bottom"><div class="gacha-capsule-star">★</div></div>
+        </div>
         <div class="animation-text">ガチャ実行中...</div>
     </div>
 
@@ -174,97 +199,83 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // --- 全要素の取得 ---
             const getEl = (id) => document.getElementById(id);
-            const gachaModeRadios = document.querySelectorAll('input[name="gacha-mode"]');
-            const ceilingSettingsPanel = getEl('ceiling-settings-panel');
-            const boxSettingsPanel = getEl('box-settings-panel');
-            const itemQuantityInput = getEl('item-quantity-input');
-            const itemWeightInput = getEl('item-weight-input');
-            const pityCounterDisplay = getEl('pity-counter-display');
-            const resetBoxBtn = getEl('reset-box-btn');
-            // ... 他の要素取得は変更なし
-            const itemForm = getEl('item-form'), itemNameInput = getEl('item-name-input'), itemRarityInput = getEl('item-rarity-input'), itemDescInput = getEl('item-desc-input');
-            const hashtagInput = getEl('hashtag-input'), drawerNameInput = getEl('drawer-name-input'), itemList = getEl('item-list');
-            const clearItemsBtn = getEl('clear-items-btn'), gachaButton = getEl('gacha-button'), resultDisplay = getEl('result-display');
-            const drawCountInput = getEl('draw-count'), historyList = getEl('history-list'), clearHistoryBtn = getEl('clear-history-btn');
-            const resultActions = getEl('result-actions'), copyBtn = getEl('copy-btn'), tweetBtn = getEl('tweet-btn');
-            const historyTabs = getEl('history-tabs'), raritySuggestions = getEl('rarity-suggestions'), exportCsvBtn = getEl('export-csv-btn');
-            const importBtn = getEl('import-btn'), exportBtn = getEl('export-btn'), importFileInput = getEl('import-file-input'), animationOverlay = getEl('animation-overlay');
+            const gachaModeRadios = document.querySelectorAll('input[name="gacha-mode"]'),
+                  ceilingSettingsPanel = getEl('ceiling-settings-panel'),
+                  boxSettingsPanel = getEl('box-settings-panel'),
+                  itemQuantityInput = getEl('item-quantity-input'),
+                  itemWeightInput = getEl('item-weight-input'),
+                  pityCounterDisplay = getEl('pity-counter-display'),
+                  resetBoxBtn = getEl('reset-box-btn'),
+                  ceilingCountInput = getEl('ceiling-count'),
+                  ceilingRarityInput = getEl('ceiling-rarity'),
+                  itemForm = getEl('item-form'), itemNameInput = getEl('item-name-input'), itemRarityInput = getEl('item-rarity-input'), itemDescInput = getEl('item-desc-input'),
+                  hashtagInput = getEl('hashtag-input'), drawerNameInput = getEl('drawer-name-input'), itemList = getEl('item-list'),
+                  clearItemsBtn = getEl('clear-items-btn'), gachaButton = getEl('gacha-button'), resultDisplay = getEl('result-display'),
+                  drawCountInput = getEl('draw-count'), historyList = getEl('history-list'), clearHistoryBtn = getEl('clear-history-btn'),
+                  resultActions = getEl('result-actions'), copyBtn = getEl('copy-btn'), tweetBtn = getEl('tweet-btn'),
+                  itemListHeader = getEl('item-list-header'), toggleItemsBtn = getEl('toggle-items-btn'),
+                  historyTabs = getEl('history-tabs'), raritySuggestions = getEl('rarity-suggestions'), exportCsvBtn = getEl('export-csv-btn'),
+                  importBtn = getEl('import-btn'), exportBtn = getEl('export-btn'), importFileInput = getEl('import-file-input'), animationOverlay = getEl('animation-overlay');
 
-            // --- アプリケーションの状態変数 ---
             let gachaItems = [];
             let gachaHistory = [];
-            let appState = {
-                gachaMode: 'normal',
-                ceiling: { count: 100, targetRarities: ['SR', 'SSR'] },
-                pityCount: {}, // { userName: count }
-            };
+            let appState = { gachaMode: 'normal', ceiling: { count: 100, targetRarities: [] }, pityCount: {} };
             let lastResultText = '', activeHistoryTab = 'all';
 
-            // --- localStorage関連 ---
             const save = (key, data) => localStorage.setItem(key, JSON.stringify(data));
             const load = (key, defaultValue) => JSON.parse(localStorage.getItem(key)) || defaultValue;
 
             function loadAll() {
                 gachaItems = load('myGachaItems_v8', []);
                 gachaHistory = load('myGachaHistory_v8', []);
-                const savedAppState = load('myGachaAppState_v8', appState);
-                // 以前のバージョンとの互換性を保つ
+                const savedAppState = load('myGachaAppState_v8', {});
                 appState = { ...appState, ...savedAppState };
                 
-                // UIに設定を反映
-                document.querySelector(`input[name="gacha-mode"][value="${appState.gachaMode}"]`).checked = true;
-                getEl('ceiling-count').value = appState.ceiling.count;
-                getEl('ceiling-rarity').value = appState.ceiling.targetRarities.join(',');
-                updateModeUI(appState.gachaMode);
+                getEl(`mode-${appState.gachaMode}`).checked = true;
+                ceilingCountInput.value = appState.ceiling.count;
+                ceilingRarityInput.value = appState.ceiling.targetRarities.join(',');
+                updateModeUI();
                 renderAll();
             }
 
             function saveAll() {
+                appState.gachaMode = document.querySelector('input[name="gacha-mode"]:checked').value;
+                appState.ceiling.count = parseInt(ceilingCountInput.value, 10) || 100;
+                appState.ceiling.targetRarities = ceilingRarityInput.value.split(',').map(s => s.trim().toUpperCase()).filter(Boolean);
                 save('myGachaItems_v8', gachaItems);
                 save('myGachaHistory_v8', gachaHistory);
-                // 現在のUIから設定を読み取って保存
-                appState.ceiling.count = parseInt(getEl('ceiling-count').value, 10);
-                appState.ceiling.targetRarities = getEl('ceiling-rarity').value.split(',').map(s => s.trim()).filter(Boolean);
                 save('myGachaAppState_v8', appState);
             }
 
-            // --- UI更新関連 ---
-            
-            /** ガチャモードに応じてUIの表示を切り替える */
-            function updateModeUI(mode) {
+            function updateModeUI() {
+                const mode = document.querySelector('input[name="gacha-mode"]:checked').value;
                 ceilingSettingsPanel.classList.toggle('hidden', mode !== 'ceiling');
                 boxSettingsPanel.classList.toggle('hidden', mode !== 'box');
                 pityCounterDisplay.classList.toggle('hidden', mode !== 'ceiling');
-                
                 itemQuantityInput.classList.toggle('hidden', mode !== 'box');
                 itemWeightInput.classList.toggle('hidden', mode === 'box');
-                
-                appState.gachaMode = mode;
-                renderItems(); // 在庫表示などを更新
-                updatePityCounter();
+                renderItems();
+                if(mode === 'ceiling') updatePityCounter();
             }
-            
-            /** 天井カウンター表示を更新 */
+
             function updatePityCounter() {
-                if(appState.gachaMode !== 'ceiling') return;
+                if (appState.gachaMode !== 'ceiling') return;
                 const drawerName = drawerNameInput.value.trim() || 'ゲスト';
                 const currentPity = appState.pityCount[drawerName] || 0;
                 const remaining = appState.ceiling.count - currentPity;
                 pityCounterDisplay.textContent = `天井まであと ${remaining} 回`;
             }
-
-            /** 景品リストを描画 */
+            
             function renderItems() {
+                const mode = document.querySelector('input[name="gacha-mode"]:checked').value;
                 itemList.innerHTML = '';
                 const totalWeight = gachaItems.reduce((sum, item) => sum + (item.weight || 0), 0);
-                
                 gachaItems.forEach((item, index) => {
                     const li = document.createElement('li');
                     let statsHTML = '';
-                    if (appState.gachaMode === 'box') {
-                        statsHTML = `在庫: ${item.currentQuantity} / ${item.initialQuantity}`;
+                    if (mode === 'box') {
+                        statsHTML = `<span class="stock">在庫: ${item.currentQuantity} / ${item.initialQuantity}</span>`;
                     } else {
                         const probability = totalWeight > 0 ? ((item.weight / totalWeight) * 100).toFixed(1) : 0;
                         statsHTML = `<span class="prob">${probability}%</span> <span class="weight" data-index="${index}">出やすさ: ${item.weight}</span>`;
@@ -272,7 +283,7 @@
                     li.innerHTML = `
                         <div class="item-info">
                             <span class="name">${item.name}</span>
-                            <span class="details">${item.rarity ? `[${item.rarity}]` : ''} ${item.description || ''}</span>
+                            <span class="details">${item.rarity ? `[${item.rarity}]` : ''}</span>
                         </div>
                         <div class="item-controls">
                             <div class="item-stats">${statsHTML}</div>
@@ -282,22 +293,22 @@
                 });
                 renderRaritySuggestions();
             }
-            
-            // ... 他のrender関数は変更なし
-            const renderAll = () => { renderItems(); /* 他のrender関数も呼ぶ */ };
 
-            // --- イベントリスナー ---
-            
-            gachaModeRadios.forEach(radio => radio.addEventListener('change', (e) => updateModeUI(e.target.value)));
-            [getEl('ceiling-count'), getEl('ceiling-rarity')].forEach(el => el.addEventListener('change', saveAll));
+            const renderHistoryTabs = () => { /* ... */ };
+            const renderHistory = () => { /* ... */ };
+            const consolidateResults = (results) => { /* ... */ };
+            const renderRaritySuggestions = () => { /* ... */ };
+            const renderAll = () => { renderItems(); renderHistoryTabs(); renderHistory(); };
+
+            gachaModeRadios.forEach(radio => radio.addEventListener('change', () => { updateModeUI(); saveAll(); }));
+            [ceilingCountInput, ceilingRarityInput].forEach(el => el.addEventListener('change', saveAll));
             drawerNameInput.addEventListener('input', updatePityCounter);
 
             resetBoxBtn.addEventListener('click', () => {
-                if(confirm('BOXガチャの在庫をすべて初期状態に戻しますか？')) {
+                if(confirm('BOXの在庫を初期状態に戻しますか？')) {
                     gachaItems.forEach(item => item.currentQuantity = item.initialQuantity);
                     saveAll();
                     renderItems();
-                    alert('BOXをリセットしました。');
                 }
             });
 
@@ -305,10 +316,10 @@
                 e.preventDefault();
                 const newItem = {
                     name: itemNameInput.value,
-                    rarity: itemRarityInput.value,
-                    description: itemDescInput.value,
+                    rarity: itemRarityInput.value.toUpperCase(),
                     weight: parseInt(itemWeightInput.value, 10) || 1,
                     initialQuantity: parseInt(itemQuantityInput.value, 10) || 1,
+                    description: itemDescInput.value,
                 };
                 newItem.currentQuantity = newItem.initialQuantity;
                 gachaItems.push(newItem);
@@ -316,53 +327,44 @@
                 renderItems();
                 itemForm.reset();
             });
-            
-            // ガチャ実行ボタン
+
             gachaButton.addEventListener('click', () => {
                 const drawCount = parseInt(drawCountInput.value, 10);
                 const drawerName = drawerNameInput.value.trim() || 'ゲスト';
                 if (drawCount <= 0 || gachaItems.length === 0) return;
-
-                // アニメーション開始
+                
                 gachaButton.disabled = true;
                 animationOverlay.classList.remove('hidden');
 
                 setTimeout(() => {
                     animationOverlay.classList.add('hidden');
                     let results = [];
-                    // モードに応じて抽選ロジックを分岐
-                    if(appState.gachaMode === 'box') {
-                        // BOXガチャの抽選
+                    const mode = appState.gachaMode;
+
+                    if (mode === 'box') {
                         let boxPool = [];
-                        gachaItems.forEach(item => {
-                            for (let i = 0; i < item.currentQuantity; i++) boxPool.push(item);
-                        });
+                        gachaItems.forEach(item => { for (let i = 0; i < item.currentQuantity; i++) boxPool.push(item); });
                         if(boxPool.length < drawCount) {
-                            alert('BOXの残り景品数が足りません！');
-                            gachaButton.disabled = false;
-                            return;
+                            alert('BOXの残り景品が足りません！'); gachaButton.disabled = false; return;
                         }
-                        for(let i = 0; i < drawCount; i++) {
+                        for(let i=0; i < drawCount; i++) {
                             const drawnIndex = Math.floor(Math.random() * boxPool.length);
-                            const drawnItem = boxPool.splice(drawnIndex, 1)[0];
-                            results.push(drawnItem);
-                            // 元のリストの在庫を減らす
-                            const originalItem = gachaItems.find(item => item.name === drawnItem.name);
-                            if(originalItem) originalItem.currentQuantity--;
+                            results.push(boxPool.splice(drawnIndex, 1)[0]);
                         }
-                    } else {
-                        // 通常・天井ガチャの抽選
+                        results.forEach(drawnItem => {
+                             gachaItems.find(item => item.name === drawnItem.name).currentQuantity--;
+                        });
+                    } else { // 通常 or 天井
                         let currentPity = appState.pityCount[drawerName] || 0;
-                        for(let i = 0; i < drawCount; i++) {
+                        for(let i=0; i < drawCount; i++) {
                             let pool = gachaItems;
-                            // 天井判定
-                            if(appState.gachaMode === 'ceiling' && currentPity >= appState.ceiling.count) {
+                            if(mode === 'ceiling' && currentPity >= appState.ceiling.count) {
                                 pool = gachaItems.filter(item => appState.ceiling.targetRarities.includes(item.rarity));
-                                if (pool.length === 0) pool = gachaItems; // 対象がない場合は通常プール
-                                appState.pityCount[drawerName] = 0; // 天井消費
+                                if (pool.length === 0) pool = gachaItems; 
+                                currentPity = 0;
                             }
-                            // 重み付き抽選
                             const totalWeight = pool.reduce((sum, item) => sum + item.weight, 0);
+                            if(totalWeight === 0) { results.push({name: '景品なし'}); continue; }
                             let random = Math.random() * totalWeight;
                             let selectedItem;
                             for (const item of pool) {
@@ -370,64 +372,51 @@
                                 random -= item.weight;
                             }
                             results.push(selectedItem);
-                            // 天井カウント更新
-                            if(appState.gachaMode === 'ceiling') {
-                                if(appState.ceiling.targetRarities.includes(selectedItem.rarity)) {
-                                    appState.pityCount[drawerName] = 0;
-                                } else {
-                                    appState.pityCount[drawerName] = (appState.pityCount[drawerName] || 0) + 1;
-                                }
+                            if(mode === 'ceiling') {
+                                if(appState.ceiling.targetRarities.includes(selectedItem.rarity)) currentPity = 0;
+                                else currentPity++;
                             }
                         }
+                        if(mode === 'ceiling') appState.pityCount[drawerName] = currentPity;
                     }
-
-                    // 結果の保存と表示
                     gachaHistory.push({ results, timestamp: new Date().toISOString(), drawerName });
                     saveAll();
                     renderAll();
                     updatePityCounter();
-                    // ...結果表示ロジックは変更なし
-                    
+                    // ...結果表示ロジック...
                     gachaButton.disabled = false;
                 }, 1500);
             });
             
             importFileInput.addEventListener('change', (event) => {
-                // ... ファイル読込 ...
                 const file = event.target.files[0];
-                if(!file) return;
+                if (!file) return;
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     try {
                         let importedItems = JSON.parse(e.target.result);
-                        if (!Array.isArray(importedItems)) throw new Error('無効な形式です。');
+                        if (!Array.isArray(importedItems)) throw new Error('形式エラー');
                         
-                        // 過去のファイル形式との互換性維持
                         importedItems = importedItems.map(item => ({
-                            name: item.name || '名称未設定',
-                            rarity: item.rarity || '',
-                            description: item.description || '',
-                            weight: item.weight || 1,
+                            name: item.name || '名称未設定', rarity: item.rarity || '',
+                            weight: item.weight || 1, description: item.description || '',
                             initialQuantity: item.initialQuantity || 1,
                             currentQuantity: item.hasOwnProperty('currentQuantity') ? item.currentQuantity : (item.initialQuantity || 1),
                         }));
 
-                        if (confirm('現在の景品リストをインポートした内容で上書きしますか？')) {
+                        if (confirm('現在の景品リストをインポート内容で上書きしますか？')) {
                             gachaItems = importedItems;
                             saveAll();
                             renderItems();
                             alert('設定を読み込みました。');
                         }
-                    } catch(error) {
-                        alert('ファイルの読み込みに失敗しました。\n' + error.message);
-                    }
+                    } catch (error) { alert('読込失敗: ' + error.message); }
                 };
                 reader.readAsText(file);
             });
-
+            
             // --- 初期化 ---
             loadAll();
-            // ... 他のリスナーもここに続く
         });
     </script>
 </body>
