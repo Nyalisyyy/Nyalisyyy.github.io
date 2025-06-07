@@ -15,15 +15,19 @@ body {
 header {
     background-color: #d8b5e9; /* サブカラーのパステルパープル */
     padding: 15px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    width: 100%;
+}
+
+.header-content {
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 15px; /* ロゴと文字の間隔 */
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
 .logo {
-    height: 50px; /* ロゴの高さを50pxに設定 */
+    height: 50px;
 }
 
 header h1 {
@@ -31,6 +35,35 @@ header h1 {
     color: white;
     text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
 }
+
+/* ナビゲーションメニュー */
+nav ul {
+    list-style: none;
+    padding: 10px 0 0 0;
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+}
+
+nav a {
+    color: white;
+    text-decoration: none;
+    font-weight: bold;
+    padding: 5px 10px;
+    border-radius: 8px;
+    transition: background-color 0.3s;
+}
+
+nav a:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+/* 現在表示しているページのリンクを目立たせる */
+nav a.active {
+    background-color: rgba(255, 255, 255, 0.3);
+    pointer-events: none; /* クリックできないようにする */
+}
+
 
 /* メインコンテンツのスタイル */
 main {
@@ -41,14 +74,18 @@ main {
     padding: 20px;
 }
 
-.gacha-section {
+/* 各ページのコンテンツを入れる白い箱 */
+.content-box {
     background-color: white;
     padding: 30px 40px;
     border-radius: 20px;
     box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    max-width: 800px;
+    width: 90%;
+    box-sizing: border-box;
 }
 
-.gacha-section h2 {
+.content-box h2 {
     color: #d8b5e9;
     margin-top: 0;
 }
@@ -59,17 +96,80 @@ main {
     background-color: #d8b5e9;
     color: white;
     padding: 15px 30px;
+    margin-top: 10px;
     text-decoration: none;
-    border-radius: 50px; /* 角を丸くして可愛い感じに */
+    border-radius: 50px;
     font-weight: bold;
     box-shadow: 0 4px 6px rgba(0,0,0,0.1);
     transition: transform 0.2s, background-color 0.2s;
 }
 
 .gacha-button:hover {
-    background-color: #c9a0dc; /* ホバー時にもう少し濃い紫に */
-    transform: scale(1.05); /* 少し大きくする */
+    background-color: #c9a0dc;
+    transform: scale(1.05);
 }
+
+/* Productsページの作品カード */
+.product-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    text-align: left;
+}
+
+.product-card {
+    background: #f9f9f9;
+    border: 1px solid #eee;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.product-card img {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+.product-card-info {
+    padding: 15px;
+}
+
+.product-card-info h3 {
+    margin: 0 0 10px 0;
+    color: #333;
+}
+
+.product-card-info p {
+    margin: 0;
+    font-size: 0.9em;
+    color: #666;
+}
+
+/* Linksページのリンクリスト */
+.link-list {
+    list-style: none;
+    padding: 0;
+    text-align: left;
+}
+.link-list li {
+    background-color: #f9f9f9;
+    margin: 10px 0;
+    border-radius: 8px;
+}
+.link-list a {
+    display: block;
+    padding: 15px 20px;
+    text-decoration: none;
+    color: #d8b5e9;
+    font-weight: bold;
+    transition: background-color 0.2s, padding-left 0.2s;
+}
+.link-list a:hover {
+    background-color: #f0e8f6;
+    padding-left: 25px;
+}
+
 
 /* フッターのスタイル */
 footer {
@@ -77,6 +177,7 @@ footer {
     color: white;
     padding: 10px 0;
     width: 100%;
+    margin-top: auto; /* コンテンツが少なくてもフッターを一番下に */
 }
 
 footer a {
