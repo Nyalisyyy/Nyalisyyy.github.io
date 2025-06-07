@@ -88,8 +88,16 @@
         .result-summary-list li { background: #fff; border-radius: 10px; padding: 10px 15px; margin-bottom: 8px; font-size: 18px; display: flex; align-items: center; gap: 10px; }
         .result-rarity { font-weight: 700; color: var(--purple-mid); padding: 3px 8px; border-radius: 5px; background: #efebff; }
         .result-count { font-weight: 700; color: var(--orange-end); margin-left: auto; }
-        #result-actions { display: none; gap: 10px; margin-top: 15px; width: 100%; }
+        #result-actions { 
+            display: none; 
+            gap: 10px; 
+            margin-top: 15px; 
+            margin-bottom: 20px; /* ▼ 修正点: 下部の余白を確保 ▼ */
+            width: 100%;
+        }
         #copy-btn, #tweet-btn { flex-grow: 1; flex-basis: 0; }
+        #copy-btn { background-color: var(--blue-dark); color: white; }
+        #tweet-btn { background-color: var(--twitter-blue); color: white; } /* ▼ 修正点: ボタンの色を再設定 ▼ */
 
         /* --- 履歴エリア --- */
         #history-area { min-width: 320px; }
@@ -124,7 +132,7 @@
         #animation-overlay.hidden {
             opacity: 0;
             visibility: hidden;
-            pointer-events: none; /* ▼ 修正点: 非表示時はクリックイベントを無効にする ▼ */
+            pointer-events: none; 
         }
         .gacha-capsule {
             width: 150px; height: 150px; border-radius: 50%;
@@ -167,69 +175,18 @@
     </style>
 </head>
 <body>
+
     <div id="settings-area" class="container">
-        <h2>ガチャ設定 ⚙️</h2>
-        <form id="item-form">
-            <input type="text" id="item-name-input" placeholder="景品名" required>
-            <input type="text" id="item-rarity-input" placeholder="レアリティ (例: SR)" list="rarity-suggestions">
-            <datalist id="rarity-suggestions"></datalist>
-            <input type="number" id="item-weight-input" placeholder="出やすさ(数字が大きいほど高確率)" required min="1">
-            <input type="text" id="item-desc-input" placeholder="景品の説明 (単発ガチャ時に表示)">
-            <div class="form-buttons">
-                <button type="submit" class="btn btn-add">景品を追加</button>
-                <button type="button" id="import-btn" class="btn btn-io">設定を読込</button>
-                <button type="button" id="export-btn" class="btn btn-io">設定を保存</button>
-                <button type="button" id="clear-items-btn" class="btn btn-clear">全削除</button>
-            </div>
-        </form>
-        <div id="item-list-header">
-            <h3>景品リスト</h3>
-            <span id="toggle-items-btn" class="toggle-icon open">></span>
         </div>
-        <ul id="item-list" class="scrollable-list"></ul>
-    </div>
     <input type="file" id="import-file-input" style="display: none;" accept=".json">
     <div id="gacha-area" class="container">
-        <div>
-            <h1>✨運試しガチャ✨</h1>
-             <div class="gacha-settings-grid">
-                <input type="text" id="drawer-name-input" placeholder="名前を入力 (例: リスナー名)">
-                <input type="text" id="hashtag-input" placeholder="X用ハッシュタグ (例: #〇〇の配信)">
-            </div>
-            <div id="result-display">
-                <p style="font-size:18px; color: #888;">景品を設定してガチャを回そう！</p>
-            </div>
-            <div id="result-actions">
-                <button id="copy-btn" class="btn">クリップボードにコピー</button>
-                <a id="tweet-btn" class="btn" href="#" target="_blank" rel="noopener noreferrer">Xで結果をシェア</a>
-            </div>
         </div>
-        <div class="gacha-controls">
-             <input type="number" id="draw-count" value="1" min="1" max="100">
-             <button id="gacha-button" class="btn">回す！</button>
-        </div>
-    </div>
     <div id="history-area" class="container">
-        <h2>ガチャ履歴 📜</h2>
-        <div id="history-tabs"></div>
-        <ul id="history-list" class="scrollable-list"></ul>
-        <div class="history-actions">
-            <button id="export-csv-btn" class="btn">履歴をCSV出力</button>
-            <button id="clear-history-btn" class="btn btn-clear">履歴をリセット</button>
         </div>
-    </div>
     <div id="animation-overlay" class="hidden">
-        <div class="gacha-capsule">
-            <div class="gacha-capsule-top"></div>
-            <div class="gacha-capsule-bottom">
-                <div class="gacha-capsule-star">★</div>
-            </div>
         </div>
-        <div class="animation-text">ガチャ実行中...</div>
-    </div>
     <footer>
-        <a href="https://x.com/Nyalisyyy" target="_blank" rel="noopener noreferrer">Created by @Nyalisyyy</a>
-    </footer>
+        </footer>
 
     <script>
         // JavaScriptの内容は前回から変更ありません
