@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <title>IRIAM配信用ガチャツール</title>
+    <meta name="author" content="にゃる @Nyalisyyy">
+    <meta name="description" content="IRIAM（イリアム）などの配信用に使える高機能ガチャツール。景品、レアリティ、確率を自由に設定でき、履歴管理やSNSシェアも可能です。">
+    
+    <link rel="icon" type="image/png" href="./logo.png">
+    <link rel="apple-touch-icon" href="./logo.png">
+
+    <meta property="og:title" content="IRIAM配信用ガチャツール">
+    <meta property="og:description" content="IRIAM（イリアム）などの配信用に使える高機能ガチャツール。景品、レアリティ、確率を自由に設定でき、履歴管理やSNSシェアも可能です。">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="./logo.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:creator" content="@Nyalisyyy">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --purple-light: #d2baff; --purple-mid: #a78bfa; --purple-dark: #8e7de4;
+            --blue-light: #bde0fe; --blue-dark: #88a4e8;
+            --orange-start: #f6d365; --orange-end: #fda085;
+            --green-mid: #2ecc71; --gray-dark: #8f9da8;
+            --text-dark: #555; --text-light: #777;
+            --twitter-blue: #1DA1F2;
+        }
+        html { box-sizing: border-box; }
+        *, *:before, *:after { box-sizing: inherit; }
+        body { 
+            font-family: 'M PLUS Rounded 1c', sans-serif;
+            background: linear-gradient(135deg, var(--purple-light) 0%, var(--blue-light) 100%);
+            color: var(--text-dark); padding: 20px; display: flex; flex-wrap: wrap; gap: 20px; justify-content: center;
+            padding-bottom: 60px; /* フッターのスペースを確保 */
+        }
+        .container { 
+            background-color: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px);
+            border: 2px solid #ffffff; border-radius: 20px; padding: 25px; 
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            display: flex; flex-direction: column;
+            flex: 1;
+        }
+        h1, h2, h3 { color: var(--purple-dark); text-align: center; padding-bottom: 10px; font-weight: 700; margin: 0; }
+        .scrollable-list { list-style: none; padding: 0; margin-top: 15px; max-height: 350px; overflow-y: auto; padding-right: 10px; transition: all 0.3s ease; }
+        .scrollable-list.hidden { max-height: 0; overflow: hidden; margin-top: 0; opacity: 0; }
+        .scrollable-list::-webkit-scrollbar { width: 8px; }
+        .scrollable-list::-webkit-scrollbar-thumb { background: #ccc; border-radius: 10px; }
+        .btn { padding: 12px 18px; border: none; border-radius: 10px; cursor: pointer; font-weight: 700; transition: all 0.3s; font-family: 'M PLUS Rounded 1c', sans-serif; text-decoration: none; display: inline-block; text-align:center; }
+        input[type="text"], input[type="number"] { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; font-family: 'M PLUS Rounded 1c', sans-serif; }
+
+        /* --- 設定エリア --- */
+        #settings-area { min-width: 320px; }
+        #item-form { display: grid; gap: 12px; margin-top: 15px; }
+        #item-list-header { display: flex; justify-content: space-between; align-items: center; cursor: pointer; margin-top: 20px; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        .toggle-icon { font-size: 24px; font-weight: 700; color: var(--purple-mid); transition: transform 0.3s ease; }
+        .toggle-icon.open { transform: rotate(90deg); }
+        .form-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+        .btn-add { background: linear-gradient(45deg, var(--purple-mid), #c1a4ff); color: white; box-shadow: 0 4px 10px rgba(167, 139, 250, 0.3); grid-column: 1 / -1; }
+        .btn-add:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(167, 139, 250, 0.4); }
+        .btn-io { background-color: var(--green-mid); color: white; }
+        .btn-clear { background-color: #c5c5d2; color: white; }
+        #item-list li { background-color: #fff; padding: 10px 15px; border-radius: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border-left: 5px solid var(--purple-light); }
+        .item-info .name { font-weight: 700; color: #6a5acd; }
+        .item-info .details { font-size: 0.9em; color: var(--text-light); }
+        .item-controls { text-align: right; }
+        .item-stats { font-size: 0.9em; font-weight: 700; }
+        .item-stats .prob { color: var(--blue-dark); }
+        .item-stats .weight { color: var(--text-light); margin-left: 8px; cursor: pointer; text-decoration: underline dotted; }
+        .item-stats .weight:hover { color: var(--purple-dark); }
+        .delete-btn { background-color: #ffb6c1; color: white; border-radius: 50%; width: 28px; height: 28px; cursor: pointer; font-weight: 700; border: none; font-size: 14px; margin-top: 5px; }
+
+        /* --- ガチャエリア --- */
+        #gacha-area { min-width: 320px; justify-content: space-between; }
+        .gacha-settings-grid { display: grid; gap: 10px; margin-bottom: 20px; }
+        .gacha-controls { display: flex; align-items: center; gap: 15px; margin-top: auto; }
+        #draw-count { font-size: 20px; width: 80px; text-align: center; padding: 15px 10px; font-weight: 700; }
+        #gacha-button { font-size: 24px; font-weight: 700; padding: 18px 0; background: linear-gradient(45deg, var(--orange-start), var(--orange-end)); color: white; box-shadow: 0 5px 15px rgba(253, 160, 133, 0.4); flex-grow: 1; }
+        #result-display { width: 100%; min-height: 200px; text-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center; flex-grow: 1; }
+        .result-item .rarity { font-size: 22px; font-weight: 700; display: block; margin-bottom: 10px; color: var(--purple-mid); }
+        .result-item .item-name { font-size: 36px; font-weight: 700; color: var(--purple-dark); line-height: 1.2; }
+        .result-item .item-description { font-size: 16px; color: #666; margin-top: 15px; }
+        .result-summary-list li { background: #fff; border-radius: 10px; padding: 10px 15px; margin-bottom: 8px; font-size: 18px; display: flex; align-items: center; gap: 10px; }
+        .result-rarity { font-weight: 700; color: var(--purple-mid); padding: 3px 8px; border-radius: 5px; background: #efebff; }
+        .result-count { font-weight: 700; color: var(--orange-end); margin-left: auto; }
+        #result-actions { display: none; gap: 10px; margin-top: 15px; width: 100%; }
+        #copy-btn, #tweet-btn { flex-grow: 1; flex-basis: 0; }
+
+        /* --- 履歴エリア --- */
+        #history-area { min-width: 320px; }
+        #history-tabs { display: flex; flex-wrap: wrap; gap: 8px; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 10px; }
+        .tab-btn { background-color: #e9e9f0; color: var(--text-dark); }
+        .tab-btn.active { background-color: var(--purple-mid); color: white; }
+        #history-list > li { background-color: #f7f7fa; padding: 10px 15px; border-radius: 8px; margin-bottom: 12px; }
+        .history-item-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 5px; }
+        .history-drawer-name { font-weight: 700; color: var(--purple-dark); }
+        .history-timestamp { font-size: 12px; color: var(--text-light); }
+        .history-item-content { padding-left: 10px; list-style-type: none; }
+        .history-item-content li { margin-bottom: 4px; }
+        .history-copy-btn { background: none; border: none; cursor: pointer; font-size: 20px; padding: 0 5px; }
+        .history-actions { display: flex; gap: 10px; margin-top: 15px; }
+        #export-csv-btn { background-color: var(--gray-dark); color: white; flex-basis: 50%; }
+        #clear-history-btn { flex-basis: 50%; }
+
+        /* --- フッター --- */
+        footer { position: fixed; right: 0; bottom: 0; padding: 10px 15px; background-color: rgba(255, 255, 255, 0.5); backdrop-filter: blur(5px); border-top-left-radius: 10px; }
+        footer a { font-size: 14px; color: var(--text-dark); text-decoration: none; font-weight: 700; }
+        footer a:hover { color: var(--purple-dark); }
+        
+        /* --- ▼ここからアニメーション用のCSSを追加▼ --- */
+        #animation-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            z-index: 1000;
+            opacity: 1;
+            visibility: visible;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        #animation-overlay.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+        .gacha-capsule {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            position: relative;
+            overflow: hidden;
+            border: 5px solid white;
+            animation: shake-and-spin 0.5s infinite linear;
+        }
+        .gacha-capsule-top {
+            width: 100%;
+            height: 50%;
+            background-color: #ff7575;
+        }
+        .gacha-capsule-bottom {
+            width: 100%;
+            height: 50%;
+            background-color: #f0f8ff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .gacha-capsule-star {
+            font-size: 40px;
+            color: #ffd700;
+        }
+        .animation-text {
+            margin-top: 20px;
+            color: white;
+            font-size: 1.5rem;
+            font-weight: 700;
+            text-shadow: 0 0 10px black;
+        }
+        @keyframes shake-and-spin {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            25% { transform: translate(4px, -4px) rotate(10deg); }
+            50% { transform: translate(-4px, 4px) rotate(-10deg); }
+            75% { transform: translate(4px, 4px) rotate(10deg); }
+            100% { transform: translate(0, 0) rotate(0deg); }
+        }
+
+        /* --- レスポンシブ対応設定 --- */
+        @media (max-width: 1200px) { .container { flex-basis: 45%; } }
+        @media (max-width: 768px) {
+            body { padding: 10px; gap: 15px; flex-direction: column; }
+            .container { flex-basis: 100%; width: 100%; padding: 20px 15px; min-width: unset; }
+            h1 { font-size: 1.8rem; }
+            .result-item .item-name { font-size: 2rem; }
+        }
+        @media (max-width: 480px) {
+            .gacha-controls { flex-direction: column; align-items: stretch; }
+            #draw-count { width: 100%; }
+            #gacha-button { font-size: 22px; padding: 15px 10px; }
+            #result-actions .btn { font-size: 14px; padding: 12px 8px; }
+            .history-actions, .form-buttons { flex-direction: column; }
+            .form-buttons { grid-template-columns: 1fr; }
+            h2 { font-size: 1.3rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="settings-area" class="container">
+        <h2>ガチャ設定 ⚙️</h2>
+        <form id="item-form">
+            <input type="text" id="item-name-input" placeholder="景品名" required>
+            <input type="text" id="item-rarity-input" placeholder="レアリティ (例: SR)" list="rarity-suggestions">
+            <datalist id="rarity-suggestions"></datalist>
+            <input type="number" id="item-weight-input" placeholder="出やすさ(数字が大きいほど高確率)" required min="1">
+            <input type="text" id="item-desc-input" placeholder="景品の説明 (単発ガチャ時に表示)">
+            <div class="form-buttons">
+                <button type="submit" class="btn btn-add">景品を追加</button>
+                <button type="button" id="import-btn" class="btn btn-io">設定を読込</button>
+                <button type="button" id="export-btn" class="btn btn-io">設定を保存</button>
+                <button type="button" id="clear-items-btn" class="btn btn-clear">全削除</button>
+            </div>
+        </form>
+        <div id="item-list-header">
+            <h3>景品リスト</h3>
+            <span id="toggle-items-btn" class="toggle-icon open">></span>
+        </div>
+        <ul id="item-list" class="scrollable-list"></ul>
+    </div>
+
+    <input type="file" id="import-file-input" style="display: none;" accept=".json">
+
+    <div id="gacha-area" class="container">
+        <div>
+            <h1>✨運試しガチャ✨</h1>
+             <div class="gacha-settings-grid">
+                <input type="text" id="drawer-name-input" placeholder="名前を入力 (例: リスナー名)">
+                <input type="text" id="hashtag-input" placeholder="X用ハッシュタグ (例: #〇〇の配信)">
+            </div>
+            <div id="result-display">
+                <p style="font-size:18px; color: #888;">景品を設定してガチャを回そう！</p>
+            </div>
+            <div id="result-actions">
+                <button id="copy-btn" class="btn">クリップボードにコピー</button>
+                <a id="tweet-btn" class="btn" href="#" target="_blank" rel="noopener noreferrer">Xで結果をシェア</a>
+            </div>
+        </div>
+        <div class="gacha-controls">
+             <input type="number" id="draw-count" value="1" min="1" max="100">
+             <button id="gacha-button" class="btn">回す！</button>
+        </div>
+    </div>
+    
+    <div id="history-area" class="container">
+        <h2>ガチャ履歴 📜</h2>
+        <div id="history-tabs"></div>
+        <ul id="history-list" class="scrollable-list"></ul>
+        <div class="history-actions">
+            <button id="export-csv-btn" class="btn">履歴をCSV出力</button>
+            <button id="clear-history-btn" class="btn btn-clear">履歴をリセット</button>
+        </div>
+    </div>
+
+    <div id="animation-overlay" class="hidden">
+        <div class="gacha-capsule">
+            <div class="gacha-capsule-top"></div>
+            <div class="gacha-capsule-bottom">
+                <div class="gacha-capsule-star">★</div>
+            </div>
+        </div>
+        <div class="animation-text">ガチャ実行中...</div>
+    </div>
+    <footer>
+        <a href="https://x.com/Nyalisyyy" target="_blank" rel="noopener noreferrer">Created by @Nyalisyyy</a>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const getEl = (id) => document.getElementById(id);
+            const itemForm = getEl('item-form'), itemNameInput = getEl('item-name-input'), itemRarityInput = getEl('item-rarity-input'),
+                  itemWeightInput = getEl('item-weight-input'), itemDescInput = getEl('item-desc-input'),
+                  hashtagInput = getEl('hashtag-input'), drawerNameInput = getEl('drawer-name-input'),
+                  itemList = getEl('item-list'), clearItemsBtn = getEl('clear-items-btn'), gachaButton = getEl('gacha-button'),
+                  resultDisplay = getEl('result-display'), drawCountInput = getEl('draw-count'), historyList = getEl('history-list'),
+                  clearHistoryBtn = getEl('clear-history-btn'), resultActions = getEl('result-actions'), copyBtn = getEl('copy-btn'), 
+                  tweetBtn = getEl('tweet-btn'), itemListHeader = getEl('item-list-header'), toggleItemsBtn = getEl('toggle-items-btn'),
+                  historyTabs = getEl('history-tabs'), raritySuggestions = getEl('rarity-suggestions'), exportCsvBtn = getEl('export-csv-btn'),
+                  importBtn = getEl('import-btn'), exportBtn = getEl('export-btn'), importFileInput = getEl('import-file-input'),
+                  animationOverlay = getEl('animation-overlay'); // アニメーション要素を取得
+
+            let gachaItems = [], gachaHistory = [], lastResultText = '', activeHistoryTab = 'all';
+
+            // ... (大部分のJavaScriptは変更なしのため省略) ...
+
+            const loadAll = () => {
+                gachaItems = load('myGachaItems_v7', []);
+                gachaHistory = load('myGachaHistory_v7', []);
+                const settings = load('myGachaSettings_v7', { hashtag: '', drawerName: '' });
+                hashtagInput.value = settings.hashtag;
+                drawerNameInput.value = settings.drawerName;
+                renderAll();
+            };
+            
+            const saveSettings = () => {
+                const settings = { hashtag: hashtagInput.value, drawerName: drawerNameInput.value };
+                save('myGachaSettings_v7', settings);
+            };
+
+            const consolidateResults = (results) => {
+                const map = new Map();
+                results.forEach(item => {
+                    const key = item.name;
+                    if (map.has(key)) { map.get(key).count++; } 
+                    else { map.set(key, { item: item, count: 1 }); }
+                });
+                return Array.from(map.values());
+            };
+
+            const renderRaritySuggestions = () => {
+                raritySuggestions.innerHTML = '';
+                const uniqueRarities = [...new Set(gachaItems.map(item => item.rarity).filter(r => r))];
+                uniqueRarities.forEach(rarity => {
+                    const option = document.createElement('option');
+                    option.value = rarity;
+                    raritySuggestions.appendChild(option);
+                });
+            };
+
+            const renderItems = () => {
+                itemList.innerHTML = '';
+                const totalWeight = gachaItems.reduce((sum, item) => sum + (item.weight || 0), 0);
+                gachaItems.forEach((item, index) => {
+                    const probability = totalWeight > 0 ? ((item.weight / totalWeight) * 100).toFixed(1) : 0;
+                    const li = document.createElement('li');
+                    li.innerHTML = `
+                        <div class="item-info">
+                            <span class="name">${item.name || ''}</span>
+                            <span class="details">${item.rarity ? `[${item.rarity}]` : ''} ${item.description || ''}</span>
+                        </div>
+                        <div class="item-controls">
+                            <div class="item-stats">
+                                <span class="prob">${probability}%</span>
+                                <span class="weight" data-index="${index}">出やすさ: ${item.weight}</span>
+                            </div>
+                            <button class="delete-btn" data-index="${index}">×</button>
+                        </div>`;
+                    itemList.appendChild(li);
+                });
+                renderRaritySuggestions();
+            };
+
+            const renderHistoryTabs = () => {
+                historyTabs.innerHTML = '';
+                const uniqueNames = [...new Set(gachaHistory.map(entry => entry.drawerName))];
+                const createTab = (name, text) => {
+                    const tab = document.createElement('button');
+                    tab.className = 'btn tab-btn';
+                    tab.dataset.name = name;
+                    tab.textContent = text;
+                    if (name === activeHistoryTab) tab.classList.add('active');
+                    historyTabs.appendChild(tab);
+                };
+                createTab('all', 'すべて');
+                uniqueNames.forEach(name => createTab(name, name));
+            };
+
+            const renderHistory = () => {
+                historyList.innerHTML = '';
+                const filteredHistory = (activeHistoryTab === 'all') ? gachaHistory : gachaHistory.filter(entry => entry.drawerName === activeHistoryTab);
+                [...filteredHistory].reverse().forEach((session) => {
+                    const originalIndex = gachaHistory.findIndex(s => s.timestamp === session.timestamp);
+                    const sessionLi = document.createElement('li');
+                    const d = new Date(session.timestamp);
+                    const timeString = `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
+                    const consolidated = consolidateResults(session.results);
+                    let contentHTML = '<ul class="history-item-content">';
+                    consolidated.forEach(({item, count}) => {
+                        contentHTML += `<li>${item.rarity ? `[${item.rarity}]` : ''} ${item.name} ${count > 1 ? `<b>×${count}</b>` : ''}</li>`;
+                    });
+                    contentHTML += '</ul>';
+                    sessionLi.innerHTML = `
+                        <div class="history-item-header">
+                            <span class="history-drawer-name">${session.drawerName || 'ゲスト'} さん (${session.results.length}連)</span>
+                            <div>
+                                <span class="history-timestamp">${d.toLocaleDateString()} ${timeString}</span>
+                                <button class="history-copy-btn" data-index="${originalIndex}">📋</button>
+                            </div>
+                        </div>
+                        ${contentHTML}`;
+                    historyList.appendChild(sessionLi);
+                });
+            };
+
+            const renderAll = () => { renderItems(); renderHistoryTabs(); renderHistory(); };
+            
+            itemForm.addEventListener('submit', e => {
+                e.preventDefault();
+                gachaItems.push({ name: itemNameInput.value, rarity: itemRarityInput.value, weight: parseInt(itemWeightInput.value, 10) || 1, description: itemDescInput.value });
+                save('myGachaItems_v7', gachaItems);
+                renderItems();
+                itemForm.reset();
+            });
+
+            [hashtagInput, drawerNameInput].forEach(input => input.addEventListener('change', saveSettings));
+
+            itemList.addEventListener('click', e => {
+                if (e.target.classList.contains('delete-btn')) {
+                    const index = e.target.dataset.index;
+                    gachaItems.splice(index, 1);
+                    save('myGachaItems_v7', gachaItems);
+                    renderItems();
+                }
+                if (e.target.classList.contains('weight')) {
+                    const index = e.target.dataset.index;
+                    const item = gachaItems[index];
+                    const newWeight = prompt(`「${item.name}」の新しい「出やすさ」を入力してください。`, item.weight);
+                    if (newWeight !== null) {
+                        const weightValue = parseInt(newWeight, 10);
+                        if (!isNaN(weightValue) && weightValue > 0) {
+                            gachaItems[index].weight = weightValue;
+                            save('myGachaItems_v7', gachaItems);
+                            renderItems();
+                        } else { alert('有効な正の整数を入力してください。'); }
+                    }
+                }
+            });
+
+            clearItemsBtn.addEventListener('click', () => {
+                if (gachaItems.length > 0 && confirm('景品リストをすべて削除しますか？')) {
+                    gachaItems = []; save('myGachaItems_v7', gachaItems); renderItems();
+                }
+            });
+            
+            clearHistoryBtn.addEventListener('click', () => {
+                if (gachaHistory.length > 0 && confirm('ガチャ履歴をすべて削除しますか？')) {
+                    gachaHistory = []; activeHistoryTab = 'all'; save('myGachaHistory_v7', gachaHistory); renderAll();
+                }
+            });
+            
+
+            // ▼▼▼ ガチャ実行ボタンの処理をアニメーション対応に修正 ▼▼▼
+            gachaButton.addEventListener('click', () => {
+                if (gachaItems.length === 0) { alert('景品が設定されていません！'); return; }
+                const drawCount = parseInt(drawCountInput.value, 10);
+                const drawerName = drawerNameInput.value.trim() || 'ゲスト';
+                if (drawCount <= 0) return;
+
+                gachaButton.disabled = true;
+                resultActions.style.display = 'none';
+                
+                // アニメーション表示開始
+                animationOverlay.classList.remove('hidden');
+
+                // 結果表示までの待機
+                setTimeout(() => {
+                    // アニメーション非表示
+                    animationOverlay.classList.add('hidden');
+
+                    const results = [];
+                    const totalWeight = gachaItems.reduce((sum, item) => sum + (item.weight || 0), 0);
+                    for (let i = 0; i < drawCount; i++) {
+                        let random = Math.random() * totalWeight;
+                        let selectedItem;
+                        for (const item of gachaItems) {
+                            if (random < item.weight) { selectedItem = item; break; }
+                            random -= item.weight;
+                        }
+                        results.push(selectedItem);
+                    }
+                    
+                    gachaHistory.push({ results: results, timestamp: new Date().toISOString(), drawerName: drawerName });
+                    save('myGachaHistory_v7', gachaHistory);
+                    renderAll();
+                    
+                    resultDisplay.innerHTML = '';
+                    const consolidated = consolidateResults(results);
+                    if (results.length === 1) {
+                        const { item } = consolidated[0];
+                        resultDisplay.innerHTML = `<div class="result-item">
+                            ${item.rarity ? `<span class="rarity">【${item.rarity}】</span>` : ''}
+                            <span class="item-name">${item.name}</span>
+                            ${item.description ? `<p class="item-description">${item.description}</p>` : ''}
+                        </div>`;
+                    } else {
+                        const ul = document.createElement('ul');
+                        ul.className = 'result-summary-list scrollable-list';
+                        consolidated.forEach(({ item, count }) => {
+                            const li = document.createElement('li');
+                            li.innerHTML = `<span class="result-rarity">${item.rarity || 'N'}</span>
+                                          <span class="result-item-name">${item.name}</span>
+                                          ${count > 1 ? `<span class="result-count">×${count}</span>` : ''}`;
+                            ul.appendChild(li);
+                        });
+                        resultDisplay.appendChild(ul);
+                    }
+                    lastResultText = `${drawerName}さんのガチャ結果 (${results.length}連)\n✨結果✨\n` 
+                        + consolidated.map(({item, count}) => `${item.rarity ? `[${item.rarity}]` : ''} ${item.name} ${count > 1 ? `×${count}` : ''}`).join('\n');
+                    
+                    const hashtags = hashtagInput.value.replace(/#/g, '');
+                    const tweetUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(lastResultText)}&hashtags=${encodeURIComponent(hashtags)}`;
+                    tweetBtn.href = tweetUrl;
+                    
+                    resultActions.style.display = 'flex';
+                    gachaButton.disabled = false;
+                }, 1500); // アニメーションを見せるため少し長めに設定
+            });
+
+            // ... (残りのイベントリスナーは変更なしのため省略) ...
+            copyBtn.addEventListener('click', () => {
+                if (!lastResultText) return;
+                navigator.clipboard.writeText(lastResultText).then(() => {
+                    copyBtn.textContent = 'コピーしました！';
+                    setTimeout(() => { copyBtn.textContent = 'クリップボードにコピー'; }, 2000);
+                });
+            });
+            itemListHeader.addEventListener('click', () => {
+                itemList.classList.toggle('hidden');
+                toggleItemsBtn.classList.toggle('open');
+            });
+            historyTabs.addEventListener('click', (e) => {
+                if (e.target.classList.contains('tab-btn')) {
+                    activeHistoryTab = e.target.dataset.name;
+                    document.querySelectorAll('#history-tabs .tab-btn').forEach(btn => btn.classList.remove('active'));
+                    e.target.classList.add('active');
+                    renderHistory();
+                }
+            });
+            historyList.addEventListener('click', (e) => {
+                const copyButton = e.target.closest('.history-copy-btn');
+                if (copyButton) {
+                    const index = copyButton.dataset.index;
+                    const session = gachaHistory[index];
+                    if (!session) return;
+                    const d = new Date(session.timestamp);
+                    const timeString = `${d.toLocaleDateString()} ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
+                    const consolidated = consolidateResults(session.results);
+                    let textToCopy = `ガチャ履歴\n引いた人: ${session.drawerName || 'ゲスト'} さん\n日時: ${timeString}\n---結果(${session.results.length}連)---\n`
+                        + consolidated.map(({item, count}) => `${item.rarity ? `[${item.rarity}]` : ''} ${item.name} ${count > 1 ? `×${count}` : ''}`).join('\n');
+                    navigator.clipboard.writeText(textToCopy).then(() => {
+                        const originalIcon = copyButton.textContent;
+                        copyButton.textContent = '✅';
+                        setTimeout(() => { copyButton.textContent = originalIcon; }, 2000);
+                    });
+                }
+            });
+            exportCsvBtn.addEventListener('click', () => {
+                if (gachaHistory.length === 0) { alert('エクスポートする履歴がありません。'); return; }
+                const headers = ['"日時"', '"名前"', '"レアリティ"', '"景品名"', '"説明"'];
+                let csvContent = headers.join(',') + '\n';
+                gachaHistory.forEach(session => {
+                    const d = new Date(session.timestamp);
+                    const timeString = `${d.getFullYear()}-${(d.getMonth()+1).toString().padStart(2,'0')}-${d.getDate().toString().padStart(2,'0')} ${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
+                    session.results.forEach(item => {
+                        const row = [timeString, session.drawerName, item.rarity || '', item.name, item.description || ''].map(val => `"${String(val).replace(/"/g, '""')}"`).join(',');
+                        csvContent += row + '\n';
+                    });
+                });
+                const bom = new Uint8Array([0xEF, 0xBB, 0xBF]);
+                const blob = new Blob([bom, csvContent], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement("a");
+                const url = URL.createObjectURL(blob);
+                link.setAttribute("href", url);
+                const date = new Date().toISOString().slice(0, 10);
+                link.setAttribute("download", `gacha_history_${date}.csv`);
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            });
+            exportBtn.addEventListener('click', () => {
+                if(gachaItems.length === 0) { alert('保存する景品がありません。'); return; }
+                const defaultName = `gacha-settings-${new Date().toISOString().slice(0, 10)}`;
+                const fileName = prompt("保存するファイル名を入力してください（.jsonは自動で付きます）", defaultName);
+                if (fileName === null || fileName.trim() === "") { return; }
+                const finalFileName = fileName.replace(/\.json$/i, "").trim() + ".json";
+                const jsonString = JSON.stringify(gachaItems, null, 2);
+                const blob = new Blob([jsonString], { type: 'application/json' });
+                const link = document.createElement("a");
+                const url = URL.createObjectURL(blob);
+                link.setAttribute("href", url);
+                link.setAttribute("download", finalFileName);
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            });
+            importBtn.addEventListener('click', () => { importFileInput.click(); });
+            importFileInput.addEventListener('change', (event) => {
+                const file = event.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const importedItems = JSON.parse(e.target.result);
+                        if (!Array.isArray(importedItems)) throw new Error('データが配列ではありません。');
+                        if (confirm('現在の景品リストをインポートした内容で上書きします。よろしいですか？')) {
+                            gachaItems = importedItems;
+                            save('myGachaItems_v7', gachaItems);
+                            renderItems();
+                            alert('設定を読み込みました。');
+                        }
+                    } catch (error) {
+                        alert('ファイルの読み込みに失敗しました。無効なファイル形式の可能性があります。\n' + error.message);
+                    } finally { event.target.value = ''; }
+                };
+                reader.readAsText(file);
+            });
+
+            loadAll();
+        });
+    </script>
+</body>
+</html>
