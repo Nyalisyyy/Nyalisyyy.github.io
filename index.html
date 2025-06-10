@@ -3,41 +3,166 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="author" content="にゃる">
-    <title>Home - にゃるのホームページ</title>
-    <link rel="stylesheet" href="style.css">
+    
+    <title>IRIAM配信用ガチャツール</title>
+    <meta name="author" content="にゃる @Nyalisyyy">
+    <meta name="description" content="IRIAM（イリアム）などのライブ配信で使える、オリジナルのガチャが作れるツールです。">
+    
+    <link rel="icon" type="image/png" href="./logo.png">
+    <link rel="apple-touch-icon" href="./logo.png">
+
+    <meta property="og:title" content="IRIAM配信用ガチャツール">
+    <meta property="og:description" content="IRIAM（イリアム）などのライブ配信で使える、オリジナルのガチャが作れるツールです。">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="./logo.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:creator" content="@Nyalisyyy">
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Yusei+Magic&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --purple-light: #d2baff;
+            --purple-mid: #a78bfa;
+            --purple-dark: #8e7de4;
+            --blue-light: #bde0fe;
+            --orange-start: #f6d365;
+            --orange-end: #fda085;
+            --text-dark: #555;
+        }
+        html { box-sizing: border-box; }
+        *, *:before, *:after { box-sizing: inherit; }
+        
+        body { 
+            font-family: 'M PLUS Rounded 1c', sans-serif;
+            background: linear-gradient(135deg, var(--purple-light) 0%, var(--blue-light) 100%);
+            color: var(--text-dark);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .main-container {
+            background-color: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            border: 2px solid #ffffff;
+            border-radius: 24px;
+            padding: 40px; 
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            max-width: 800px;
+            width: 100%;
+            text-align: center;
+        }
+
+        h1 {
+            color: var(--purple-dark);
+            font-weight: 800;
+            font-size: 2.5rem;
+            margin-top: 0;
+            margin-bottom: 15px;
+        }
+
+        .description {
+            font-size: 1.1rem;
+            line-height: 1.8;
+            margin-bottom: 30px;
+        }
+        
+        .screenshot-area {
+             margin-bottom: 30px;
+             padding: 10px;
+             background: #fff;
+             border-radius: 16px;
+             box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+
+        .screenshot-area img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 12px;
+        }
+
+        .btn {
+            padding: 18px 36px;
+            border: none;
+            border-radius: 16px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 1.2rem;
+            transition: all 0.3s;
+            font-family: 'M PLUS Rounded 1c', sans-serif;
+            text-decoration: none;
+            display: inline-block;
+            box-shadow: 0 5px 15px rgba(253, 160, 133, 0.4);
+            background: linear-gradient(45deg, var(--orange-start), var(--orange-end));
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(253, 160, 133, 0.5);
+        }
+
+        footer {
+            position: fixed;
+            right: 0;
+            bottom: 0;
+            padding: 10px 15px;
+            background-color: rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(5px);
+            border-top-left-radius: 10px;
+        }
+
+        footer a {
+            font-size: 14px;
+            color: var(--text-dark);
+            text-decoration: none;
+            font-weight: 700;
+        }
+
+        footer a:hover {
+            color: var(--purple-dark);
+        }
+
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 2rem;
+            }
+            .main-container {
+                padding: 30px 20px;
+            }
+            .btn {
+                padding: 16px 28px;
+                font-size: 1.1rem;
+            }
+        }
+
+    </style>
 </head>
 <body>
 
-    <header>
-        <div class="header-content">
-            <img src="./logo.png" alt="ロゴ" class="logo">
-            <h1>にゃる</h1>
+    <div class="main-container">
+        <h1>✨ IRIAM配信用ガチャツール ✨</h1>
+        <p class="description">
+            ようこそ！<br>
+            ここは、IRIAMなどのライブ配信で使えるオリジナルのガチャを作成・管理できるツールです。<br>
+            景品の名前、レアリティ、出現確率などを自由に設定して、リスナーさんと一緒に盛り上がりましょう！
+        </p>
+        
+        <div class="screenshot-area">
+             <img src="https://storage.googleapis.com/gemini-generative-ai-public-data/prompts/v1/f991552a2335191a92e1654359856f77/image.png" alt="ガチャツールのスクリーンショット">
         </div>
-        <nav>
-            <ul>
-                <li><a href="index.html" class="active">Home</a></li>
-                <li><a href="about.html">About</a></li>
-                <li><a href="product.html">Products</a></li>
-                <li><a href="contact.html">Contact</a></li>
-                <li><a href="links.html">Links</a></li>
-            </ul>
-        </nav>
-    </header>
 
-    <main>
-        <div class="content-box">
-            <h2>IRIAMガチャツール</h2>
-            <p>下のボタンからガチャのページにとべるよ！</p>
-            <a href="./gacha.html" class="gacha-button">ガチャへGO!</a>
-        </div>
-    </main>
+        <a href="gacha.html" class="btn">ガチャツールを使ってみる！</a>
+    </div>
 
     <footer>
-        <p><a href="https://x.com/Nyalisyyy" target="_blank" rel="noopener noreferrer">@Nyalisyyy</a></p>
+        <a href="https://x.com/Nyalisyyy" target="_blank" rel="noopener noreferrer">Created by @Nyalisyyy</a>
     </footer>
 
 </body>
