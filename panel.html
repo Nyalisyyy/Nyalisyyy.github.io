@@ -76,6 +76,30 @@
         .btn-primary { padding: 12px 24px; border: none; border-radius: 12px; cursor: pointer; font-weight: 700; font-size: 1rem; text-decoration: none; display: inline-block; color: white; transition: all 0.3s; background: linear-gradient(45deg, var(--orange-start), var(--orange-end)); box-shadow: 0 5px 15px rgba(253, 160, 133, 0.4); text-align: center; }
         .btn-secondary { background: linear-gradient(45deg, #89f7fe, #66a6ff); box-shadow: 0 5px 15px rgba(102, 166, 255, 0.4); }
         .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(253, 160, 133, 0.5); }
+
+        /* --- フッタースタイル --- */
+        footer {
+            position: fixed; /* 画面に位置を固定 */
+            right: 0;        /* 右端に配置 */
+            bottom: 0;       /* 下端に配置 */
+            padding: 10px 15px;
+            background-color: rgba(255, 255, 255, 0.5); /* 半透明の白 */
+            backdrop-filter: blur(5px); /* 背景をぼかす（すりガラス効果） */
+            border-top-left-radius: 10px; /* 左上の角だけを丸くする */
+            z-index: 1000; /* 他の要素より手前に表示 */
+        }
+
+        footer a {
+            font-size: 14px;
+            color: var(--text-dark, #555); /* 変数がなければデフォルト色を指定 */
+            text-decoration: none; /* 下線を消す */
+            font-weight: 700;      /* 太字にする */
+            transition: color 0.3s;/* 色の変化を滑らかに */
+        }
+
+        footer a:hover {
+            color: var(--purple-dark, #8e7de4); /* マウスオーバーで色を変更 */
+        }
     </style>
 </head>
 <body>
@@ -133,6 +157,10 @@
             </aside>
         </div>
     </div>
+
+    <footer>
+        <a href="https://x.com/Nyalisyyy" target="_blank" rel="noopener noreferrer">Created by @Nyalisyyy</a>
+    </footer>
 
     <script>
     document.addEventListener('DOMContentLoaded', () => {
