@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IRIAMパネル開けツール (v0.4)</title>
+    <title>IRIAMパネル開けツール (v2.0)</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Kiwi+Maru&family=M+PLUS+Rounded+1c:wght@400;700;800&family=Noto+Sans+JP:wght@400;700&family=Shippori+Mincho&family=Yusei+Magic&display=swap" rel="stylesheet">
     <style>
         :root {
             --purple-light: #d2baff; --purple-mid: #a78bfa; --purple-dark: #8e7de4;
@@ -19,348 +19,444 @@
         body {
             font-family: 'M PLUS Rounded 1c', sans-serif;
             background: linear-gradient(135deg, var(--purple-light) 0%, var(--blue-light) 100%);
-            color: var(--text-dark); margin: 0; padding: 20px; min-height: 100vh;
+            color: var(--text-dark); margin: 0; padding: 20px; height: 100vh;
             display: flex; justify-content: center; align-items: flex-start;
         }
         .tool-container {
             background-color: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px);
             border: 2px solid #ffffff; border-radius: 24px; padding: 30px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1); width: 100%; max-width: 1200px;
-            display: flex; flex-direction: column; gap: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1); width: 100%; max-width: 1400px;
+            display: flex; flex-direction: column; gap: 20px; height: calc(100% - 40px);
         }
-        .header {
-            display: flex; justify-content: space-between; align-items: center;
-            border-bottom: 2px solid #eee; padding-bottom: 20px;
-        }
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 20px; }
         .header h1 { color: var(--purple-dark); font-weight: 800; font-size: 2rem; margin: 0; }
         .mode-switcher { display: flex; background-color: rgba(0,0,0,0.05); border-radius: 12px; padding: 5px; }
-        .mode-btn {
-            padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: 700;
-            font-size: 1rem; font-family: 'M PLUS Rounded 1c', sans-serif; background-color: transparent;
-            color: var(--text-light); transition: all 0.3s;
-        }
-        .mode-btn.active {
-            color: white; background: linear-gradient(45deg, var(--orange-start), var(--orange-end));
-            box-shadow: 0 4px 10px rgba(253, 160, 133, 0.4);
-        }
-        .main-content { display: flex; gap: 20px; min-height: 60vh; }
+        .mode-btn { padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: 700; font-size: 1rem; font-family: 'M PLUS Rounded 1c', sans-serif; background-color: transparent; color: var(--text-light); transition: all 0.3s; }
+        .mode-btn.active { color: white; background: linear-gradient(45deg, var(--orange-start), var(--orange-end)); box-shadow: 0 4px 10px rgba(253, 160, 133, 0.4); }
+        .main-content { display: flex; gap: 20px; flex-grow: 1; min-height: 0; }
         .panel-area {
-            flex-grow: 1; background-color: #e9ecef; border-radius: 16px;
-            display: flex; justify-content: center; align-items: center;
-            position: relative; overflow: hidden;
+            flex-grow: 1; width: 100%; max-width: 100%; height: 100%;
+            background-color: #e9ecef; border: 3px dashed var(--gray-dark);
+            border-radius: 16px; display: flex; justify-content: center; align-items: center;
+            position: relative; overflow: hidden; transition: border-color 0.3s;
         }
-        #panel-placeholder { display: flex; flex-direction: column; gap: 15px; align-items: center; color: var(--gray-dark); }
-        #panel-placeholder p { margin:0; font-weight: 700; }
-        #uploaded-image { max-width: 100%; max-height: 100%; object-fit: contain; display: none; }
+        .panel-area.drag-over { border-color: var(--purple-mid); }
+        #panel-placeholder { text-align: center; color: var(--gray-dark); font-weight: 700; }
+        #uploaded-image { display: none; max-width: 100%; max-height: 100%; object-fit: contain; }
         #panel-svg-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+        #panel-svg-container polygon { transition: fill 0.2s, opacity 0.3s; }
+        #panel-svg-container polygon.selected { fill: var(--purple-mid) !important; opacity: 0.8; }
+        #panel-svg-container polygon.open { opacity: 0; pointer-events: none; }
+        .panel-text { font-weight: 700; font-size: 14px; text-anchor: middle; pointer-events: none; }
         .vertex-handle { cursor: move; transition: r 0.2s, fill 0.2s; }
         .vertex-handle:hover { r: 8px !important; fill: var(--orange-end); }
         .vertex-handle.locked { cursor: not-allowed; }
-        .vertex-handle.locked:hover { r: 6px !important; fill: var(--gray-dark); }
-        .sidebar {
-            width: 320px; flex-shrink: 0; background-color: rgba(255, 255, 255, 0.7);
-            border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 20px;
-        }
-        .sidebar h2 {
-            font-size: 1.4rem; font-weight: 700; color: var(--purple-dark);
-            margin: 0; padding-bottom: 10px; border-bottom: 2px solid #eee;
-        }
-        .setting-group { display: flex; flex-direction: column; gap: 10px; }
+        .sidebar { width: 320px; flex-shrink: 0; background-color: rgba(255, 255, 255, 0.85); border-radius: 16px; display: flex; flex-direction: column; min-height: 0; }
+        .sidebar-inner-scrollable { padding: 20px; display: flex; flex-direction: column; gap: 15px; overflow-y: auto; flex-grow: 1; min-height: 0; }
+        .sidebar-header, .sidebar-footer { padding: 20px; flex-shrink: 0; }
+        .sidebar-header { padding-bottom: 15px; border-bottom: 2px solid #eee;}
+        .sidebar-footer { padding-top: 15px; border-top: 2px solid #eee; }
+        .sidebar h2 { font-size: 1.4rem; font-weight: 700; color: var(--purple-dark); margin: 0; padding: 0; border: none; }
+        .sidebar h3 { font-size: 1.1rem; font-weight: 700; color: var(--text-dark); margin: 10px 0 0 0; }
+        .setting-group { display: flex; flex-direction: column; gap: 8px; }
         .setting-group label { font-weight: 700; font-size: 0.9rem; }
-        .setting-group input, .setting-group select {
-            width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc;
-            font-family: 'M PLUS Rounded 1c', sans-serif; font-size: 1rem;
-        }
-        /* --- Improved Color Picker --- */
-        .color-picker-wrapper {
-            position: relative;
-            width: 100%;
-            height: 40px;
-        }
-        .color-preview {
-            width: 100%;
-            height: 100%;
-            border-radius: 8px;
-            border: 2px solid #ddd;
-            cursor: pointer;
-            transition: border-color 0.3s;
-        }
-        .color-preview:hover {
-            border-color: var(--purple-mid);
-        }
-        .color-picker-wrapper input[type="color"] {
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            opacity: 0; /* Make the native UI invisible */
-            cursor: pointer;
-        }
-
-        .preview-sidebar { display: none; }
-        .btn-primary {
-            padding: 12px 24px; border: none; border-radius: 12px; cursor: pointer; font-weight: 700;
-            font-size: 1rem; font-family: 'M PLUS Rounded 1c', sans-serif; text-decoration: none;
-            display: inline-block; color: white; transition: all 0.3s;
-            background: linear-gradient(45deg, var(--orange-start), var(--orange-end));
-            box-shadow: 0 5px 15px rgba(253, 160, 133, 0.4); text-align: center;
-        }
+        .setting-group input, .setting-group select { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-family: inherit; font-size: 1rem; }
+        .color-picker-wrapper { position: relative; width: 100%; height: 40px; }
+        .color-preview { width: 100%; height: 100%; border-radius: 8px; border: 2px solid #ddd; cursor: pointer; transition: border-color 0.3s; }
+        .color-picker-wrapper input[type="color"] { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+        #panel-specific-settings { border-top: 2px solid #eee; margin-top: 10px; padding-top: 15px; }
+        #selected-panel-label { background-color: var(--purple-mid); color: white; padding: 5px 10px; border-radius: 8px; text-align: center; }
+        .preview-sidebar { display: none; padding: 0; }
+        #progress-list { display: flex; flex-direction: column; gap: 10px; }
+        #preview-actions { display: flex; flex-direction: column; gap: 10px; }
+        .progress-list-item { display: flex; flex-direction: column; gap: 5px; background-color: rgba(255,255,255,0.7); padding: 10px; border-radius: 8px; }
+        .progress-list-item label { font-weight: 700; font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .progress-input-wrapper { display: flex; align-items: center; gap: 5px; }
+        .progress-input-wrapper input { flex-grow: 1; text-align: right; }
+        .btn-primary { padding: 12px 24px; border: none; border-radius: 12px; cursor: pointer; font-weight: 700; font-size: 1rem; text-decoration: none; display: inline-block; color: white; transition: all 0.3s; background: linear-gradient(45deg, var(--orange-start), var(--orange-end)); box-shadow: 0 5px 15px rgba(253, 160, 133, 0.4); text-align: center; }
+        .btn-secondary { background: linear-gradient(45deg, #89f7fe, #66a6ff); box-shadow: 0 5px 15px rgba(102, 166, 255, 0.4); }
         .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(253, 160, 133, 0.5); }
     </style>
 </head>
 <body>
     <div class="tool-container">
-        <header class="header">
-            <h1>IRIAMパネル開けツール (v0.4)</h1>
-            <div class="mode-switcher">
-                <button id="edit-mode-btn" class="mode-btn active">編集モード</button>
-                <button id="preview-mode-btn" class="mode-btn">プレビュー</button>
-            </div>
+        <header class="header"><h1>IRIAMパネル開けツール (v2.0)</h1>
+            <div class="mode-switcher"><button id="edit-mode-btn" class="mode-btn active">編集モード</button><button id="preview-mode-btn" class="mode-btn">プレビュー</button></div>
         </header>
         <div class="main-content">
             <main class="panel-area" id="panel-area">
-                <div class="panel-area-placeholder" id="panel-placeholder">
-                    <p>ここに背景となる一枚絵をアップロード</p>
-                    <input type="file" id="image-upload-input" accept="image/*" style="display: none;">
-                    <button id="upload-btn" class="btn-primary">画像を選択</button>
-                </div>
-                 <img id="uploaded-image" />
-                 <svg id="panel-svg-container"></svg>
+                <div id="panel-placeholder"><p>右のサイドバーから画像をアップロードしてください</p></div>
+                <img id="uploaded-image" /><svg id="panel-svg-container"></svg>
             </main>
             <aside class="sidebar" id="edit-sidebar">
-                <h2>⚙️ 編集設定</h2>
-                <div class="setting-group">
-                    <label for="panel-cols">パネルの数（横）</label>
-                    <input type="number" id="panel-cols" value="3" min="1">
-                </div>
-                <div class="setting-group">
-                    <label for="panel-rows">パネルの数（縦）</label>
-                    <input type="number" id="panel-rows" value="3" min="1">
-                </div>
-                <hr>
-                <h2>🎨 全体のデザイン</h2>
-                <div class="setting-group">
-                    <label for="panel-color">パネルの色</label>
-                    <div class="color-picker-wrapper">
-                        <input type="color" id="panel-color-input" value="#a78bfa">
-                        <div id="panel-color-preview" class="color-preview"></div>
+                <div class="sidebar-inner-scrollable">
+                    <h2>⚙️ 全体設定</h2>
+                    <div class="setting-group">
+                        <button id="upload-btn" class="btn-primary">画像を選択</button>
+                        <input type="file" id="image-upload-input" accept="image/*" style="display: none;">
                     </div>
-                </div>
-                <div class="setting-group">
-                    <label for="border-color">線の色</label>
-                    <div class="color-picker-wrapper">
-                        <input type="color" id="border-color-input" value="#ffffff">
-                        <div id="border-color-preview" class="color-preview"></div>
+                    <div class="setting-group"><label>パネルの数（横）</label><input type="number" id="panel-cols" value="3" min="1"></div>
+                    <div class="setting-group"><label>パネルの数（縦）</label><input type="number" id="panel-rows" value="3" min="1"></div><hr>
+                    <h3>🎨 デザイン</h3>
+                    <div class="setting-group">
+                        <label>パネルの不透明度: <span id="opacity-value">100</span>%</label>
+                        <input type="range" id="opacity-slider" min="0" max="100" value="100">
                     </div>
-                </div>
-                 <div class="setting-group">
-                    <label for="font-select">フォント</label>
-                    <select id="font-select">
-                        <option value="'M PLUS Rounded 1c', sans-serif">M PLUS Rounded 1c</option>
-                        <option value="'Kiwi Maru', serif">Kiwi Maru</option>
-                        <option value="'Yusei Magic', sans-serif">Yusei Magic</option>
-                        <option value="sans-serif">ゴシック体 (標準)</option>
-                        <option value="serif">明朝体 (標準)</option>
-                    </select>
+                    <div class="setting-group"><label>パネルの色</label><div class="color-picker-wrapper"><input type="color" id="panel-color-input" value="#a78bfa"><div id="panel-color-preview" class="color-preview"></div></div></div>
+                    <div class="setting-group"><label>線の色 (パネル境界線)</label><div class="color-picker-wrapper"><input type="color" id="border-color-input" value="#ffffff"><div id="border-color-preview" class="color-preview"></div></div></div>
+                    <div class="setting-group"><label>文字の色</label><div class="color-picker-wrapper"><input type="color" id="text-color-input" value="#ffffff"><div id="text-color-preview" class="color-preview"></div></div></div>
+                    <div class="setting-group">
+                        <label>フォント</label>
+                        <select id="font-select">
+                            <option value="'M PLUS Rounded 1c', sans-serif">M PLUS Rounded 1c</option>
+                            <option value="'Kiwi Maru', serif">Kiwi Maru</option>
+                            <option value="'Yusei Magic', sans-serif">Yusei Magic</option>
+                            <option value="'Noto Sans JP', sans-serif">Noto Sans JP (ゴシック)</option>
+                            <option value="'Shippori Mincho', serif">しっぽり明朝</option>
+                        </select>
+                    </div>
+                    <div id="panel-specific-settings" style="display: none;"><hr><h2 id="selected-panel-label"></h2>
+                        <div class="setting-group"><label for="panel-condition">条件</label><input type="text" id="panel-condition" placeholder="例: いいね100個"></div>
+                        <div class="setting-group"><label for="panel-goal">目標値</label><input type="number" id="panel-goal" value="10" min="1"></div>
+                    </div>
                 </div>
             </aside>
             <aside class="sidebar preview-sidebar" id="preview-sidebar">
-                <h2>📊 進捗状況</h2>
-                <div id="progress-list"></div>
-                <hr>
-                <button id="save-image-btn" class="btn-primary">進捗を画像で保存</button>
+                <div class="sidebar-header"><h2>📊 進捗状況</h2></div>
+                <div class="sidebar-inner-scrollable" id="progress-list-container">
+                    <div id="progress-list"></div>
+                </div>
+                <div class="sidebar-footer" id="preview-actions">
+                    <button id="save-image-btn" class="btn-primary">進捗を画像で保存</button>
+                    <button id="share-btn" class="btn-primary btn-secondary">Xで共有</button>
+                </div>
             </aside>
         </div>
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // --- DOM要素 ---
-            const imageUploadInput = document.getElementById('image-upload-input'), uploadBtn = document.getElementById('upload-btn');
-            const panelPlaceholder = document.getElementById('panel-placeholder'), uploadedImage = document.getElementById('uploaded-image');
-            const svgContainer = document.getElementById('panel-svg-container'), panelArea = document.getElementById('panel-area');
-            const colsInput = document.getElementById('panel-cols'), rowsInput = document.getElementById('panel-rows');
-            const panelColorInput = document.getElementById('panel-color-input'), panelColorPreview = document.getElementById('panel-color-preview');
-            const borderColorInput = document.getElementById('border-color-input'), borderColorPreview = document.getElementById('border-color-preview');
-            const fontSelect = document.getElementById('font-select');
-            const editModeBtn = document.getElementById('edit-mode-btn'), previewModeBtn = document.getElementById('preview-mode-btn');
-            const editSidebar = document.getElementById('edit-sidebar'), previewSidebar = document.getElementById('preview-sidebar');
+    document.addEventListener('DOMContentLoaded', () => {
+        const dom = {
+            uploadBtn: document.getElementById('upload-btn'), imageUploadInput: document.getElementById('image-upload-input'),
+            panelArea: document.getElementById('panel-area'), panelPlaceholder: document.getElementById('panel-placeholder'),
+            uploadedImage: document.getElementById('uploaded-image'), svgContainer: document.getElementById('panel-svg-container'),
+            colsInput: document.getElementById('panel-cols'), rowsInput: document.getElementById('panel-rows'),
+            opacitySlider: document.getElementById('opacity-slider'), opacityValue: document.getElementById('opacity-value'),
+            panelColor: { input: document.getElementById('panel-color-input'), preview: document.getElementById('panel-color-preview') },
+            borderColor: { input: document.getElementById('border-color-input'), preview: document.getElementById('border-color-preview') },
+            textColor: { input: document.getElementById('text-color-input'), preview: document.getElementById('text-color-preview') },
+            fontSelect: document.getElementById('font-select'),
+            editModeBtn: document.getElementById('edit-mode-btn'), previewModeBtn: document.getElementById('preview-mode-btn'),
+            editSidebar: document.getElementById('edit-sidebar'), previewSidebar: document.getElementById('preview-sidebar'),
+            specificSettings: document.getElementById('panel-specific-settings'), selectedPanelLabel: document.getElementById('selected-panel-label'),
+            panelConditionInput: document.getElementById('panel-condition'), panelGoalInput: document.getElementById('panel-goal'),
+            progressList: document.getElementById('progress-list'), saveImageBtn: document.getElementById('save-image-btn'), shareBtn: document.getElementById('share-btn'),
+        };
 
-            // --- 状態管理 ---
-            const appState = {
-                isImageLoaded: false,
-                image: { element: uploadedImage, displayWidth: 0, displayHeight: 0 },
-                grid: { cols: 3, rows: 3 },
-                settings: { panelColor: '#a78bfa', borderColor: '#ffffff', fontFamily: "'M PLUS Rounded 1c', sans-serif" },
-                vertices: [],
-                panels: [],
-                draggingVertexIndex: null,
-            };
+        let state = {
+            isEditMode: true, isImageLoaded: false,
+            image: { renderedX: 0, renderedY: 0, renderedW: 0, renderedH: 0 },
+            grid: { cols: 3, rows: 3 },
+            settings: { panelOpacity: 1, panelColor: '#a78bfa', borderColor: '#ffffff', textColor: '#ffffff', fontFamily: "'M PLUS Rounded 1c', sans-serif" },
+            vertices: [], panels: [], selectedPanelId: null, draggingVertexIndex: null,
+        };
 
-            // --- 初期化 ---
-            function initialize() {
-                updateColorPreview('panel', appState.settings.panelColor);
-                updateColorPreview('border', appState.settings.borderColor);
+        function init() {
+            setupEventListeners();
+            updateColorPreviews();
+            switchMode(true);
+        }
 
-                // イベントリスナーの設定
-                uploadBtn.addEventListener('click', () => imageUploadInput.click());
-                imageUploadInput.addEventListener('change', handleImageUpload);
-                colsInput.addEventListener('input', (e) => updateGrid('cols', e.target.value));
-                rowsInput.addEventListener('input', (e) => updateGrid('rows', e.target.value));
-                panelColorInput.addEventListener('input', (e) => updateSetting('panelColor', e.target.value));
-                borderColorInput.addEventListener('input', (e) => updateSetting('borderColor', e.target.value));
-                fontSelect.addEventListener('change', (e) => updateSetting('fontFamily', e.target.value));
-                editModeBtn.addEventListener('click', () => switchMode('edit'));
-                previewModeBtn.addEventListener('click', () => switchMode('preview'));
-                
-                panelArea.addEventListener('mousemove', handleDrag);
-                window.addEventListener('mouseup', endDrag);
-                window.addEventListener('resize', resetAndDraw);
+        function setupEventListeners() {
+            dom.uploadBtn.addEventListener('click', () => dom.imageUploadInput.click());
+            dom.imageUploadInput.addEventListener('change', handleImageUpload);
+            dom.panelArea.addEventListener('dragover', (e) => { e.preventDefault(); dom.panelArea.classList.add('drag-over'); });
+            dom.panelArea.addEventListener('dragleave', () => dom.panelArea.classList.remove('drag-over'));
+            dom.panelArea.addEventListener('drop', (e) => { dom.panelArea.classList.remove('drag-over'); handleImageUpload(e); });
+            dom.opacitySlider.addEventListener('input', (e) => { const opacity = parseInt(e.target.value, 10); dom.opacityValue.textContent = opacity; updateSetting('panelOpacity', opacity / 100); });
+            dom.editModeBtn.addEventListener('click', () => switchMode(true));
+            dom.previewModeBtn.addEventListener('click', () => switchMode(false));
+            dom.colsInput.addEventListener('input', () => updateGrid('cols', dom.colsInput.value));
+            dom.rowsInput.addEventListener('input', () => updateGrid('rows', dom.rowsInput.value));
+            dom.panelColor.input.addEventListener('input', () => updateSetting('panelColor', dom.panelColor.input.value));
+            dom.borderColor.input.addEventListener('input', () => updateSetting('borderColor', dom.borderColor.input.value));
+            dom.textColor.input.addEventListener('input', () => updateSetting('textColor', dom.textColor.input.value));
+            dom.fontSelect.addEventListener('change', (e) => updateSetting('fontFamily', e.target.value));
+            dom.panelConditionInput.addEventListener('input', (e) => updateSelectedPanel('condition', e.target.value));
+            dom.panelGoalInput.addEventListener('input', (e) => updateSelectedPanel('goal', parseInt(e.target.value, 10) || 1));
+            dom.svgContainer.addEventListener('mousemove', handleDrag);
+            window.addEventListener('mouseup', endDrag);
+            window.addEventListener('resize', resetAndDraw);
+            dom.saveImageBtn.addEventListener('click', saveAsImage);
+            dom.shareBtn.addEventListener('click', shareOnX);
+        }
+
+        function switchMode(toEdit) {
+            state.isEditMode = toEdit;
+            dom.editModeBtn.classList.toggle('active', toEdit);
+            dom.previewModeBtn.classList.toggle('active', !toEdit);
+            dom.editSidebar.style.display = toEdit ? 'flex' : 'none';
+            dom.previewSidebar.style.display = !toEdit ? 'flex' : 'none';
+            if (state.isImageLoaded) { if (!toEdit) buildProgressList(); draw(); }
+        }
+
+        function updateColorPreviews() {
+            dom.panelColor.preview.style.backgroundColor = state.settings.panelColor;
+            dom.borderColor.preview.style.backgroundColor = state.settings.borderColor;
+            dom.textColor.preview.style.backgroundColor = state.settings.textColor;
+        }
+
+        function selectPanel(panelId) {
+            state.selectedPanelId = panelId;
+            if (panelId === null) { dom.specificSettings.style.display = 'none'; } else {
+                const panel = state.panels.find(p => p.id === panelId);
+                dom.selectedPanelLabel.textContent = `パネル #${panelId + 1} を編集中`;
+                dom.panelConditionInput.value = panel.condition;
+                dom.panelGoalInput.value = panel.goal;
+                dom.specificSettings.style.display = 'block';
             }
+            draw();
+        }
 
-            // --- 関数 ---
-            function switchMode(mode) {
-                const isEdit = mode === 'edit';
-                editModeBtn.classList.toggle('active', isEdit);
-                previewModeBtn.classList.toggle('active', !isEdit);
-                editSidebar.style.display = isEdit ? 'flex' : 'none';
-                previewSidebar.style.display = !isEdit ? 'flex' : 'none';
-                
-                if (appState.isImageLoaded) {
-                    const handles = svgContainer.querySelectorAll('.vertex-handle');
-                    handles.forEach(h => h.style.display = isEdit ? 'block' : 'none');
-                }
-            }
-
-            function handleImageUpload(event) {
-                const file = event.target.files[0];
-                if (!file) return;
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    appState.image.element.src = e.target.result;
-                    appState.image.element.onload = () => {
-                        appState.isImageLoaded = true;
-                        panelPlaceholder.style.display = 'none';
-                        appState.image.element.style.display = 'block';
-                        resetAndDraw();
-                    };
-                };
-                reader.readAsDataURL(file);
-            }
-
-            function resetAndDraw() {
-                if (!appState.isImageLoaded) return;
-                const rect = appState.image.element.getBoundingClientRect();
-                appState.image.displayWidth = rect.width;
-                appState.image.displayHeight = rect.height;
-                initializeVerticesAndPanels();
-                draw();
-            }
-
-            function updateGrid(key, value) {
-                const num = parseInt(value, 10);
-                if (num > 0 && appState.grid[key] !== num) {
-                    appState.grid[key] = num;
-                    if (appState.isImageLoaded) resetAndDraw();
-                }
-            }
-
-            function updateSetting(key, value) {
-                appState.settings[key] = value;
-                if (key === 'panelColor') updateColorPreview('panel', value);
-                if (key === 'borderColor') updateColorPreview('border', value);
-                if (appState.isImageLoaded) draw();
-            }
-
-            function updateColorPreview(type, color) {
-                const previewEl = type === 'panel' ? panelColorPreview : borderColorPreview;
-                previewEl.style.backgroundColor = color;
-            }
-            
-            function initializeVerticesAndPanels() {
-                appState.vertices = [];
-                appState.panels = [];
-                const { cols, rows } = appState.grid;
-                const { displayWidth, displayHeight } = appState.image;
-
-                for (let i = 0; i <= rows; i++) {
-                    for (let j = 0; j <= cols; j++) {
-                        const isLocked = i === 0 || i === rows || j === 0 || j === cols;
-                        appState.vertices.push({
-                            x: (j / cols) * displayWidth,
-                            y: (i / rows) * displayHeight,
-                            isLocked: isLocked,
-                        });
-                    }
-                }
-
-                for (let i = 0; i < rows; i++) {
-                    for (let j = 0; j < cols; j++) {
-                        const topLeft = i * (cols + 1) + j;
-                        appState.panels.push({
-                            vertexIndices: [topLeft, topLeft + 1, topLeft + cols + 2, topLeft + cols + 1],
-                        });
-                    }
-                }
-            }
-
-            function draw() {
-                if (!appState.isImageLoaded) return;
-                svgContainer.innerHTML = '';
-                svgContainer.setAttribute('viewBox', `0 0 ${appState.image.displayWidth} ${appState.image.displayHeight}`);
-
-                appState.panels.forEach(panel => {
-                    const points = panel.vertexIndices.map(i => `${appState.vertices[i].x},${appState.vertices[i].y}`).join(' ');
-                    const polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
-                    polygon.setAttribute('points', points);
-                    polygon.setAttribute('fill', appState.settings.panelColor);
-                    polygon.setAttribute('stroke', appState.settings.borderColor);
-                    polygon.setAttribute('stroke-width', '2');
-                    svgContainer.appendChild(polygon);
+        function buildProgressList() {
+            dom.progressList.innerHTML = '';
+            state.panels.forEach(panel => {
+                const item = document.createElement('div');
+                item.className = 'progress-list-item';
+                item.innerHTML = `<label title="${panel.condition}">#${panel.id + 1}: ${panel.condition || '（条件未設定）'}</label>
+                    <div class="progress-input-wrapper"><input type="number" value="${panel.progress}" min="0" data-id="${panel.id}"><span>/ ${panel.goal}</span></div>`;
+                dom.progressList.appendChild(item);
+            });
+            dom.progressList.querySelectorAll('input').forEach(input => {
+                input.addEventListener('input', (e) => {
+                    const id = parseInt(e.target.dataset.id, 10);
+                    const value = parseInt(e.target.value, 10);
+                    const panel = state.panels.find(p => p.id === id);
+                    if (panel) { panel.progress = value; panel.isOpen = panel.progress >= panel.goal; draw(); }
                 });
+            });
+        }
 
-                appState.vertices.forEach((vertex, index) => {
+        function handleImageUpload(event) {
+            event.preventDefault();
+            const files = event.dataTransfer ? event.dataTransfer.files : event.target.files;
+            if (!files || files.length === 0) return;
+            const file = files[0];
+            if (!file || !file.type.startsWith('image/')) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                dom.uploadedImage.src = e.target.result;
+                dom.uploadedImage.onload = () => {
+                    state.isImageLoaded = true;
+                    dom.panelPlaceholder.style.display = 'none';
+                    dom.uploadedImage.style.display = 'block';
+                    dom.panelArea.style.borderColor = 'transparent';
+                    resetAndDraw();
+                };
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function calculateImageRenderedBounds() {
+            const cW = dom.panelArea.clientWidth; const cH = dom.panelArea.clientHeight;
+            const iW = dom.uploadedImage.naturalWidth; const iH = dom.uploadedImage.naturalHeight;
+            const cRatio = cW / cH; const iRatio = iW / iH;
+            let renderedW, renderedH, renderedX, renderedY;
+            if (iRatio > cRatio) {
+                renderedW = cW; renderedH = cW / iRatio;
+                renderedX = 0; renderedY = (cH - renderedH) / 2;
+            } else {
+                renderedH = cH; renderedW = cH * iRatio;
+                renderedY = 0; renderedX = (cW - renderedW) / 2;
+            }
+            state.image = { renderedX, renderedY, renderedW, renderedH };
+        }
+
+        function resetAndDraw() {
+            if (!state.isImageLoaded) return;
+            calculateImageRenderedBounds();
+            initializeVerticesAndPanels();
+            selectPanel(null);
+            draw();
+        }
+
+        function updateGrid(key, value) {
+            const num = parseInt(value, 10);
+            if (num > 0 && state.grid[key] !== num) { state.grid[key] = num; if (state.isImageLoaded) resetAndDraw(); }
+        }
+
+        function updateSetting(key, value) {
+            state.settings[key] = value;
+            if (key.includes('Color')) updateColorPreviews();
+            if (state.isImageLoaded) draw();
+        }
+
+        function updateSelectedPanel(key, value) {
+            if (state.selectedPanelId === null) return;
+            const panel = state.panels.find(p => p.id === state.selectedPanelId);
+            if (panel) { panel[key] = value; draw(); }
+        }
+
+        function initializeVerticesAndPanels() {
+            state.vertices = []; state.panels = [];
+            const { cols, rows } = state.grid;
+            const { renderedX, renderedY, renderedW, renderedH } = state.image;
+            for (let i = 0; i <= rows; i++) {
+                for (let j = 0; j <= cols; j++) {
+                    const isLocked = i === 0 || i === rows || j === 0 || j === cols;
+                    state.vertices.push({ x: renderedX + (j / cols) * renderedW, y: renderedY + (i / rows) * renderedH, isLocked });
+                }
+            }
+            let panelId = 0;
+            for (let i = 0; i < rows; i++) {
+                for (let j = 0; j < cols; j++) {
+                    const topLeft = i * (cols + 1) + j;
+                    state.panels.push({ id: panelId++, vertexIndices: [topLeft, topLeft + 1, topLeft + cols + 2, topLeft + cols + 1], condition: '', goal: 10, progress: 0, isOpen: false, });
+                }
+            }
+        }
+
+        function draw() {
+            if (!state.isImageLoaded) return;
+            dom.svgContainer.innerHTML = '';
+            dom.svgContainer.setAttribute('viewBox', `0 0 ${dom.panelArea.clientWidth} ${dom.panelArea.clientHeight}`);
+            state.panels.forEach(panel => {
+                const points = panel.vertexIndices.map(i => `${state.vertices[i].x},${state.vertices[i].y}`).join(' ');
+                const polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+                polygon.setAttribute('points', points);
+                polygon.setAttribute('fill', state.settings.panelColor);
+                polygon.setAttribute('fill-opacity', state.settings.panelOpacity);
+                polygon.setAttribute('stroke', state.settings.borderColor);
+                polygon.setAttribute('stroke-width', '2');
+                polygon.classList.toggle('selected', panel.id === state.selectedPanelId && state.isEditMode);
+                polygon.classList.toggle('open', panel.isOpen);
+                polygon.addEventListener('click', () => { if (state.isEditMode) { selectPanel(panel.id); } else { if (panel.isOpen) return; panel.progress++; panel.isOpen = panel.progress >= panel.goal; buildProgressList(); draw(); } });
+                dom.svgContainer.appendChild(polygon);
+            });
+            state.panels.forEach(panel => {
+                if (panel.isOpen) return;
+                const center = getPolygonCenter(panel);
+                const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                text.setAttribute('x', center.x); text.setAttribute('y', center.y);
+                text.setAttribute('fill', state.settings.textColor);
+                text.style.fontFamily = state.settings.fontFamily;
+                text.classList.add('panel-text');
+                const tspan1 = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
+                tspan1.setAttribute('x', center.x); tspan1.setAttribute('dy', '-0.6em');
+                tspan1.textContent = panel.condition || '(条件未設定)';
+                const tspan2 = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
+                tspan2.setAttribute('x', center.x); tspan2.setAttribute('dy', '1.2em');
+                tspan2.textContent = `${panel.progress} / ${panel.goal}`;
+                text.appendChild(tspan1); text.appendChild(tspan2);
+                dom.svgContainer.appendChild(text);
+            });
+            if (state.isEditMode) {
+                state.vertices.forEach((vertex, index) => {
                     const handle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-                    handle.setAttribute('cx', vertex.x);
-                    handle.setAttribute('cy', vertex.y);
+                    handle.setAttribute('cx', vertex.x); handle.setAttribute('cy', vertex.y);
                     handle.setAttribute('r', vertex.isLocked ? '6' : '7');
                     handle.setAttribute('fill', vertex.isLocked ? 'var(--gray-dark)' : 'var(--purple-mid)');
-                    handle.classList.add('vertex-handle');
-                    if (vertex.isLocked) handle.classList.add('locked');
-                    
+                    handle.classList.add('vertex-handle'); if (vertex.isLocked) handle.classList.add('locked');
                     handle.addEventListener('mousedown', (e) => startDrag(e, index));
-                    svgContainer.appendChild(handle);
+                    dom.svgContainer.appendChild(handle);
                 });
-                switchMode(editModeBtn.classList.contains('active') ? 'edit' : 'preview');
             }
+        }
 
-            function startDrag(event, index) {
-                if (appState.vertices[index].isLocked) return;
-                event.preventDefault();
-                appState.draggingVertexIndex = index;
-            }
+        function getPolygonCenter(panel) {
+            const vertices = panel.vertexIndices.map(i => state.vertices[i]);
+            const x = vertices.reduce((sum, v) => sum + v.x, 0) / vertices.length;
+            const y = vertices.reduce((sum, v) => sum + v.y, 0) / vertices.length;
+            return { x, y };
+        }
 
-            function handleDrag(event) {
-                if (appState.draggingVertexIndex === null) return;
-                event.preventDefault();
-                const svgPoint = getSVGPoint(event.clientX, event.clientY);
-                const vertex = appState.vertices[appState.draggingVertexIndex];
-                vertex.x = svgPoint.x;
-                vertex.y = svgPoint.y;
-                draw();
+        function startDrag(event, index) { if (state.vertices[index].isLocked) return; event.preventDefault(); state.draggingVertexIndex = index; }
+        function handleDrag(event) {
+            if (state.draggingVertexIndex === null) return;
+            event.preventDefault();
+            const svgPoint = getSVGPoint(event.clientX, event.clientY);
+            const vertex = state.vertices[state.draggingVertexIndex];
+            const { renderedX, renderedY, renderedW, renderedH } = state.image;
+            vertex.x = Math.max(renderedX, Math.min(renderedX + renderedW, svgPoint.x));
+            vertex.y = Math.max(renderedY, Math.min(renderedY + renderedH, svgPoint.y));
+            draw();
+        }
+        function endDrag() { state.draggingVertexIndex = null; }
+        function getSVGPoint(clientX, clientY) { const CTM = dom.svgContainer.getScreenCTM(); return CTM ? { x: (clientX - CTM.e) / CTM.a, y: (clientY - CTM.f) / CTM.d } : { x: 0, y: 0 }; }
+
+        function saveAsImage() {
+            const originalImage = new Image();
+            originalImage.crossOrigin = 'anonymous';
+            originalImage.onload = () => {
+                const finalCanvas = document.createElement('canvas');
+                finalCanvas.width = originalImage.naturalWidth;
+                finalCanvas.height = originalImage.naturalHeight;
+                const ctx = finalCanvas.getContext('2d');
+
+                // 1. Draw original image
+                ctx.drawImage(originalImage, 0, 0);
+
+                // 2. Prepare for panel drawing
+                const scaleX = finalCanvas.width / state.image.renderedW;
+                const scaleY = finalCanvas.height / state.image.renderedH;
+
+                ctx.fillStyle = state.settings.panelColor;
+                ctx.strokeStyle = state.settings.borderColor;
+                ctx.lineWidth = 2 * Math.min(scaleX, scaleY); // Scale line width appropriately
+                ctx.globalAlpha = state.settings.panelOpacity;
+
+                // 3. Draw Panels
+                state.panels.forEach(panel => {
+                    if (panel.isOpen) return;
+                    const panelVertices = panel.vertexIndices.map(i => state.vertices[i]);
+                    ctx.beginPath();
+                    const startX = (panelVertices[0].x - state.image.renderedX) * scaleX;
+                    const startY = (panelVertices[0].y - state.image.renderedY) * scaleY;
+                    ctx.moveTo(startX, startY);
+                    for (let i = 1; i < panelVertices.length; i++) {
+                        const x = (panelVertices[i].x - state.image.renderedX) * scaleX;
+                        const y = (panelVertices[i].y - state.image.renderedY) * scaleY;
+                        ctx.lineTo(x, y);
+                    }
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.stroke();
+                });
+
+                // 4. Draw Texts
+                ctx.globalAlpha = 1.0;
+                ctx.fillStyle = state.settings.textColor;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                const baseFontSize = 14;
+                const scaledFontSize = baseFontSize * Math.min(scaleX, scaleY);
+                
+                state.panels.forEach(panel => {
+                    if (panel.isOpen) return;
+                    const center = getPolygonCenter(panel);
+                    const centerX = (center.x - state.image.renderedX) * scaleX;
+                    const centerY = (center.y - state.image.renderedY) * scaleY;
+                    ctx.font = `bold ${scaledFontSize}px ${state.settings.fontFamily}`;
+                    
+                    const condition = panel.condition || '(条件未設定)';
+                    const progress = `${panel.progress} / ${panel.goal}`;
+                    const lineHeight = scaledFontSize * 1.2;
+                    ctx.fillText(condition, centerX, centerY - (lineHeight / 2));
+                    ctx.fillText(progress, centerX, centerY + (lineHeight / 2));
+                });
+                
+                // 5. Create download link
+                const link = document.createElement('a');
+                link.download = 'IRIAM_panel_progress.png';
+                link.href = finalCanvas.toDataURL('image/png');
+                link.click();
             };
+            originalImage.src = dom.uploadedImage.src;
+        }
+        function shareOnX() { const text = "パネル開け企画の進捗です！✨ #IRIAM #パネル開け"; const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`; window.open(url, '_blank'); }
 
-            function endDrag() {
-                appState.draggingVertexIndex = null;
-            };
-            
-            function getSVGPoint(clientX, clientY) {
-                const CTM = svgContainer.getScreenCTM();
-                return CTM ? { x: (clientX - CTM.e) / CTM.a, y: (clientY - CTM.f) / CTM.d } : {x:0, y:0};
-            }
-
-            // --- 実行 ---
-            initialize();
-        });
+        init();
+    });
     </script>
 </body>
 </html>
