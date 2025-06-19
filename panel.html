@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IRIAMパネル開けツール</title>
+    <title>IRIAMパネル開けツール (v0.2)</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap" rel="stylesheet">
@@ -24,12 +24,8 @@
         }
 
         /* --- 基本レイアウト (デザイン仕様書より) --- */
-        html {
-            box-sizing: border-box;
-        }
-        *, *:before, *:after {
-            box-sizing: inherit;
-        }
+        html { box-sizing: border-box; }
+        *, *:before, *:after { box-sizing: inherit; }
         body {
             font-family: 'M PLUS Rounded 1c', sans-serif;
             background: linear-gradient(135deg, var(--purple-light) 0%, var(--blue-light) 100%);
@@ -39,7 +35,7 @@
             min-height: 100vh;
             display: flex;
             justify-content: center;
-            align-items: flex-start; /* 上寄せに変更 */
+            align-items: flex-start;
         }
 
         /* --- メインコンテナ --- */
@@ -65,21 +61,18 @@
             border-bottom: 2px solid #eee;
             padding-bottom: 20px;
         }
-
         .header h1 {
             color: var(--purple-dark);
             font-weight: 800;
             font-size: 2rem;
             margin: 0;
         }
-
         .mode-switcher {
             display: flex;
             background-color: rgba(0,0,0,0.05);
             border-radius: 12px;
             padding: 5px;
         }
-
         .mode-btn {
             padding: 10px 20px;
             border: none;
@@ -92,7 +85,6 @@
             color: var(--text-light);
             transition: all 0.3s;
         }
-
         .mode-btn.active {
             color: white;
             background: linear-gradient(45deg, var(--orange-start), var(--orange-end));
@@ -114,16 +106,31 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            flex-direction: column;
-            gap: 15px;
             position: relative;
             overflow: hidden;
-            border: 2px dashed var(--gray-dark);
         }
-        .panel-area-placeholder p {
-             margin:0;
-             font-weight: 700;
-             color: var(--gray-dark);
+        #panel-placeholder {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            align-items: center;
+            color: var(--gray-dark);
+        }
+        #panel-placeholder p { margin:0; font-weight: 700; }
+        
+        #uploaded-image {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            display: none; /* 初期状態は非表示 */
+        }
+
+        #panel-svg-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
         }
 
         /* --- サイドバー (設定エリア) --- */
@@ -137,7 +144,6 @@
             flex-direction: column;
             gap: 20px;
         }
-        
         .sidebar h2 {
             font-size: 1.4rem;
             font-weight: 700;
@@ -146,21 +152,13 @@
             padding-bottom: 10px;
             border-bottom: 2px solid #eee;
         }
-        
         .setting-group {
             display: flex;
             flex-direction: column;
             gap: 10px;
         }
-        
-        .setting-group label {
-            font-weight: 700;
-            font-size: 0.9rem;
-        }
-        
-        .setting-group input[type="number"],
-        .setting-group input[type="text"],
-        .setting-group select {
+        .setting-group label { font-weight: 700; font-size: 0.9rem; }
+        .setting-group input, .setting-group select {
             width: 100%;
             padding: 10px;
             border-radius: 8px;
@@ -168,13 +166,18 @@
             font-family: 'M PLUS Rounded 1c', sans-serif;
             font-size: 1rem;
         }
+        .setting-group input[type="color"] {
+            padding: 0;
+            height: 40px;
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
 
         /* --- プレビューモード専用スタイル --- */
-        .preview-sidebar {
-            display: none; /* 初期状態では非表示 */
-        }
+        .preview-sidebar { display: none; }
         
-        /* --- 汎用ボタン (デザイン仕様書より) --- */
+        /* --- 汎用ボタン --- */
         .btn-primary {
             padding: 12px 24px;
             border: none;
@@ -202,7 +205,7 @@
 
     <div class="tool-container">
         <header class="header">
-            <h1>IRIAMパネル開けツール</h1>
+            <h1>IRIAMパネル開けツール (v0.2)</h1>
             <div class="mode-switcher">
                 <button id="edit-mode-btn" class="mode-btn active">編集モード</button>
                 <button id="preview-mode-btn" class="mode-btn">プレビュー</button>
@@ -212,11 +215,13 @@
         <div class="main-content">
             <main class="panel-area" id="panel-area">
                 <div class="panel-area-placeholder" id="panel-placeholder">
-                    <p>ここに背景となる一枚絵をアップロードしてください</p>
-                    <input type="file" id="image-upload" accept="image/*" style="display: none;">
+                    <p>ここに背景となる一枚絵をアップロード</p>
+                    <input type="file" id="image-upload-input" accept="image/*" style="display: none;">
                     <button id="upload-btn" class="btn-primary">画像を選択</button>
                 </div>
-                 </main>
+                 <img id="uploaded-image" />
+                 <svg id="panel-svg-container"></svg>
+            </main>
 
             <aside class="sidebar" id="edit-sidebar">
                 <h2>⚙️ 編集設定</h2>
@@ -229,9 +234,7 @@
                     <label for="panel-rows">パネルの数（縦）</label>
                     <input type="number" id="panel-rows" value="3" min="1">
                 </div>
-
                 <hr>
-                
                 <div id="panel-specific-settings" style="display: none;">
                     <h3>選択中のパネル</h3>
                      <div class="setting-group">
@@ -243,7 +246,6 @@
                         <input type="number" id="panel-goal" value="100" min="1">
                     </div>
                 </div>
-
                 <hr>
                 <h2>🎨 全体のデザイン</h2>
                  <div class="setting-group">
@@ -263,13 +265,10 @@
                         <option value="'Times New Roman', serif">Times New Roman</option>
                     </select>
                 </div>
-
             </aside>
-            
             <aside class="sidebar preview-sidebar" id="preview-sidebar">
                 <h2>📊 進捗状況</h2>
-                <div id="progress-list">
-                    </div>
+                <div id="progress-list"></div>
                 <hr>
                 <button id="save-image-btn" class="btn-primary">進捗を画像で保存</button>
             </aside>
@@ -277,51 +276,130 @@
     </div>
 
     <script>
-        // ここにアプリケーションのロジックを記述していきます。
         document.addEventListener('DOMContentLoaded', () => {
-            const editModeBtn = document.getElementById('edit-mode-btn');
-            const previewModeBtn = document.getElementById('preview-mode-btn');
-            const editSidebar = document.getElementById('edit-sidebar');
-            const previewSidebar = document.getElementById('preview-sidebar');
-            const uploadButton = document.getElementById('upload-btn');
-            const imageUploadInput = document.getElementById('image-upload');
+            // --- DOM要素の取得 ---
+            const imageUploadInput = document.getElementById('image-upload-input');
+            const uploadBtn = document.getElementById('upload-btn');
+            const panelPlaceholder = document.getElementById('panel-placeholder');
+            const uploadedImage = document.getElementById('uploaded-image');
+            const svgContainer = document.getElementById('panel-svg-container');
+            
+            const colsInput = document.getElementById('panel-cols');
+            const rowsInput = document.getElementById('panel-rows');
+            const panelColorInput = document.getElementById('panel-color');
+            const borderColorInput = document.getElementById('border-color');
 
-            // モード切替機能
-            function switchMode(mode) {
-                if (mode === 'edit') {
-                    editModeBtn.classList.add('active');
-                    previewModeBtn.classList.remove('active');
-                    editSidebar.style.display = 'flex';
-                    previewSidebar.style.display = 'none';
-                    // TODO: 編集モード用のロジックを追加
-                } else { // preview
-                    previewModeBtn.classList.add('active');
-                    editModeBtn.classList.remove('active');
-                    previewSidebar.style.display = 'flex';
-                    editSidebar.style.display = 'none';
-                    // TODO: プレビューモード用のロジックを追加
+            // --- 状態管理オブジェクト ---
+            const appState = {
+                image: {
+                    element: uploadedImage,
+                    width: 0,
+                    height: 0,
+                },
+                grid: {
+                    cols: 3,
+                    rows: 3,
+                },
+                settings: {
+                    panelColor: '#a78bfa',
+                    borderColor: '#ffffff',
+                },
+                panels: [],
+            };
+
+            // --- イベントリスナー ---
+            uploadBtn.addEventListener('click', () => imageUploadInput.click());
+            imageUploadInput.addEventListener('change', handleImageUpload);
+            
+            colsInput.addEventListener('input', (e) => updateGrid('cols', e.target.value));
+            rowsInput.addEventListener('input', (e) => updateGrid('rows', e.target.value));
+            panelColorInput.addEventListener('input', (e) => updateSetting('panelColor', e.target.value));
+            borderColorInput.addEventListener('input', (e) => updateSetting('borderColor', e.target.value));
+
+            // --- 関数 ---
+
+            // 画像がアップロードされたときの処理
+            function handleImageUpload(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = appState.image.element;
+                    img.src = e.target.result;
+                    img.onload = () => {
+                        // 画像の表示とコンテナのサイズ調整
+                        panelPlaceholder.style.display = 'none';
+                        img.style.display = 'block';
+                        
+                        // 画像の表示サイズを取得してSVGのサイズを合わせる
+                        const rect = img.getBoundingClientRect();
+                        appState.image.width = rect.width;
+                        appState.image.height = rect.height;
+                        
+                        drawPanels();
+                    };
+                };
+                reader.readAsDataURL(file);
+            }
+
+            // グリッド設定の更新
+            function updateGrid(key, value) {
+                const num = parseInt(value, 10);
+                if (num > 0) {
+                    appState.grid[key] = num;
+                    drawPanels();
+                }
+            }
+            
+            // デザイン設定の更新
+            function updateSetting(key, value) {
+                appState.settings[key] = value;
+                drawPanels();
+            }
+
+            // パネルを描画するメイン関数
+            function drawPanels() {
+                if (!appState.image.element.src) return;
+
+                // SVGコンテナをクリア
+                svgContainer.innerHTML = '';
+
+                const { width, height } = appState.image;
+                const { cols, rows } = appState.grid;
+                
+                // SVGのサイズと viewBox を設定
+                svgContainer.setAttribute('viewBox', `0 0 ${width} ${height}`);
+
+                const panelWidth = width / cols;
+                const panelHeight = height / rows;
+
+                for (let i = 0; i < rows; i++) {
+                    for (let j = 0; j < cols; j++) {
+                        const x = j * panelWidth;
+                        const y = i * panelHeight;
+
+                        // SVGのrect要素（パネル）を作成
+                        const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                        rect.setAttribute('x', x);
+                        rect.setAttribute('y', y);
+                        rect.setAttribute('width', panelWidth);
+                        rect.setAttribute('height', panelHeight);
+                        rect.setAttribute('fill', appState.settings.panelColor);
+                        rect.setAttribute('stroke', appState.settings.borderColor);
+                        rect.setAttribute('stroke-width', '2');
+                        
+                        svgContainer.appendChild(rect);
+                    }
                 }
             }
 
-            editModeBtn.addEventListener('click', () => switchMode('edit'));
-            previewModeBtn.addEventListener('click', () => switchMode('preview'));
-            
-            // 画像アップロードボタンの動作
-            uploadButton.addEventListener('click', () => {
-                imageUploadInput.click();
-            });
-            
-            // TODO: 画像が選択されたときの処理
-            // TODO: パネル生成の処理
-            // TODO: パネル変形の処理
-            // TODO: 設定変更の処理
-            // TODO: 進捗更新の処理
-            // TODO: 画像保存の処理
-            
-            // 初期化
-            switchMode('edit');
+            // 初期化（ダミー、モード切替などは後ほど実装）
+             const editModeBtn = document.getElementById('edit-mode-btn');
+             const previewModeBtn = document.getElementById('preview-mode-btn');
+             editModeBtn.addEventListener('click', () => {});
+             previewModeBtn.addEventListener('click', () => {});
         });
-
     </script>
 </body>
 </html>
