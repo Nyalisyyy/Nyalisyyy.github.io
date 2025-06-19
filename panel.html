@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IRIAMパネル開けツール (v0.3)</title>
+    <title>IRIAMパネル開けツール (v0.4)</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap" rel="stylesheet">
@@ -71,7 +71,31 @@
             width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc;
             font-family: 'M PLUS Rounded 1c', sans-serif; font-size: 1rem;
         }
-        .setting-group input[type="color"] { padding: 0; height: 40px; background: none; border: none; cursor: pointer; }
+        /* --- Improved Color Picker --- */
+        .color-picker-wrapper {
+            position: relative;
+            width: 100%;
+            height: 40px;
+        }
+        .color-preview {
+            width: 100%;
+            height: 100%;
+            border-radius: 8px;
+            border: 2px solid #ddd;
+            cursor: pointer;
+            transition: border-color 0.3s;
+        }
+        .color-preview:hover {
+            border-color: var(--purple-mid);
+        }
+        .color-picker-wrapper input[type="color"] {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            opacity: 0; /* Make the native UI invisible */
+            cursor: pointer;
+        }
+
         .preview-sidebar { display: none; }
         .btn-primary {
             padding: 12px 24px; border: none; border-radius: 12px; cursor: pointer; font-weight: 700;
@@ -86,7 +110,7 @@
 <body>
     <div class="tool-container">
         <header class="header">
-            <h1>IRIAMパネル開けツール (v0.3)</h1>
+            <h1>IRIAMパネル開けツール (v0.4)</h1>
             <div class="mode-switcher">
                 <button id="edit-mode-btn" class="mode-btn active">編集モード</button>
                 <button id="preview-mode-btn" class="mode-btn">プレビュー</button>
@@ -116,11 +140,27 @@
                 <h2>🎨 全体のデザイン</h2>
                 <div class="setting-group">
                     <label for="panel-color">パネルの色</label>
-                    <input type="color" id="panel-color" value="#a78bfa">
+                    <div class="color-picker-wrapper">
+                        <input type="color" id="panel-color-input" value="#a78bfa">
+                        <div id="panel-color-preview" class="color-preview"></div>
+                    </div>
                 </div>
                 <div class="setting-group">
                     <label for="border-color">線の色</label>
-                    <input type="color" id="border-color" value="#ffffff">
+                    <div class="color-picker-wrapper">
+                        <input type="color" id="border-color-input" value="#ffffff">
+                        <div id="border-color-preview" class="color-preview"></div>
+                    </div>
+                </div>
+                 <div class="setting-group">
+                    <label for="font-select">フォント</label>
+                    <select id="font-select">
+                        <option value="'M PLUS Rounded 1c', sans-serif">M PLUS Rounded 1c</option>
+                        <option value="'Kiwi Maru', serif">Kiwi Maru</option>
+                        <option value="'Yusei Magic', sans-serif">Yusei Magic</option>
+                        <option value="sans-serif">ゴシック体 (標準)</option>
+                        <option value="serif">明朝体 (標準)</option>
+                    </select>
                 </div>
             </aside>
             <aside class="sidebar preview-sidebar" id="preview-sidebar">
@@ -139,30 +179,44 @@
             const panelPlaceholder = document.getElementById('panel-placeholder'), uploadedImage = document.getElementById('uploaded-image');
             const svgContainer = document.getElementById('panel-svg-container'), panelArea = document.getElementById('panel-area');
             const colsInput = document.getElementById('panel-cols'), rowsInput = document.getElementById('panel-rows');
-            const panelColorInput = document.getElementById('panel-color'), borderColorInput = document.getElementById('border-color');
+            const panelColorInput = document.getElementById('panel-color-input'), panelColorPreview = document.getElementById('panel-color-preview');
+            const borderColorInput = document.getElementById('border-color-input'), borderColorPreview = document.getElementById('border-color-preview');
+            const fontSelect = document.getElementById('font-select');
             const editModeBtn = document.getElementById('edit-mode-btn'), previewModeBtn = document.getElementById('preview-mode-btn');
             const editSidebar = document.getElementById('edit-sidebar'), previewSidebar = document.getElementById('preview-sidebar');
 
             // --- 状態管理 ---
             const appState = {
-                image: { element: uploadedImage, width: 0, height: 0, displayWidth: 0, displayHeight: 0 },
+                isImageLoaded: false,
+                image: { element: uploadedImage, displayWidth: 0, displayHeight: 0 },
                 grid: { cols: 3, rows: 3 },
-                settings: { panelColor: '#a78bfa', borderColor: '#ffffff' },
-                vertices: [], // {x, y, isLocked}
-                panels: [], // { vertexIndices: [idx1, idx2, idx3, idx4] }
+                settings: { panelColor: '#a78bfa', borderColor: '#ffffff', fontFamily: "'M PLUS Rounded 1c', sans-serif" },
+                vertices: [],
+                panels: [],
                 draggingVertexIndex: null,
             };
 
-            // --- イベントリスナー ---
-            uploadBtn.addEventListener('click', () => imageUploadInput.click());
-            imageUploadInput.addEventListener('change', handleImageUpload);
-            colsInput.addEventListener('input', (e) => updateGrid('cols', e.target.value));
-            rowsInput.addEventListener('input', (e) => updateGrid('rows', e.target.value));
-            panelColorInput.addEventListener('input', (e) => updateAndRedraw({ key: 'panelColor', value: e.target.value }));
-            borderColorInput.addEventListener('input', (e) => updateAndRedraw({ key: 'borderColor', value: e.target.value }));
-            editModeBtn.addEventListener('click', () => switchMode('edit'));
-            previewModeBtn.addEventListener('click', () => switchMode('preview'));
-            
+            // --- 初期化 ---
+            function initialize() {
+                updateColorPreview('panel', appState.settings.panelColor);
+                updateColorPreview('border', appState.settings.borderColor);
+
+                // イベントリスナーの設定
+                uploadBtn.addEventListener('click', () => imageUploadInput.click());
+                imageUploadInput.addEventListener('change', handleImageUpload);
+                colsInput.addEventListener('input', (e) => updateGrid('cols', e.target.value));
+                rowsInput.addEventListener('input', (e) => updateGrid('rows', e.target.value));
+                panelColorInput.addEventListener('input', (e) => updateSetting('panelColor', e.target.value));
+                borderColorInput.addEventListener('input', (e) => updateSetting('borderColor', e.target.value));
+                fontSelect.addEventListener('change', (e) => updateSetting('fontFamily', e.target.value));
+                editModeBtn.addEventListener('click', () => switchMode('edit'));
+                previewModeBtn.addEventListener('click', () => switchMode('preview'));
+                
+                panelArea.addEventListener('mousemove', handleDrag);
+                window.addEventListener('mouseup', endDrag);
+                window.addEventListener('resize', resetAndDraw);
+            }
+
             // --- 関数 ---
             function switchMode(mode) {
                 const isEdit = mode === 'edit';
@@ -171,9 +225,10 @@
                 editSidebar.style.display = isEdit ? 'flex' : 'none';
                 previewSidebar.style.display = !isEdit ? 'flex' : 'none';
                 
-                // 編集モードではハンドルを表示、プレビューでは非表示
-                const handles = svgContainer.querySelectorAll('.vertex-handle');
-                handles.forEach(h => h.style.display = isEdit ? 'block' : 'none');
+                if (appState.isImageLoaded) {
+                    const handles = svgContainer.querySelectorAll('.vertex-handle');
+                    handles.forEach(h => h.style.display = isEdit ? 'block' : 'none');
+                }
             }
 
             function handleImageUpload(event) {
@@ -181,46 +236,44 @@
                 if (!file) return;
                 const reader = new FileReader();
                 reader.onload = (e) => {
-                    const img = appState.image.element;
-                    img.src = e.target.result;
-                    img.onload = () => {
+                    appState.image.element.src = e.target.result;
+                    appState.image.element.onload = () => {
+                        appState.isImageLoaded = true;
                         panelPlaceholder.style.display = 'none';
-                        img.style.display = 'block';
-                        appState.image.width = img.naturalWidth;
-                        appState.image.height = img.naturalHeight;
-                        
-                        // 表示サイズを再計算してリセット
+                        appState.image.element.style.display = 'block';
                         resetAndDraw();
-                        // ウィンドウリサイズ時にも再計算
-                        window.onresize = () => resetAndDraw();
                     };
                 };
                 reader.readAsDataURL(file);
             }
 
             function resetAndDraw() {
-                if (!appState.image.element.src) return;
-                
-                // 画像の表示サイズを取得
+                if (!appState.isImageLoaded) return;
                 const rect = appState.image.element.getBoundingClientRect();
                 appState.image.displayWidth = rect.width;
                 appState.image.displayHeight = rect.height;
-
                 initializeVerticesAndPanels();
                 draw();
             }
 
             function updateGrid(key, value) {
                 const num = parseInt(value, 10);
-                if (num > 0) {
+                if (num > 0 && appState.grid[key] !== num) {
                     appState.grid[key] = num;
-                    resetAndDraw();
+                    if (appState.isImageLoaded) resetAndDraw();
                 }
             }
 
-            function updateAndRedraw({key, value}) {
+            function updateSetting(key, value) {
                 appState.settings[key] = value;
-                draw();
+                if (key === 'panelColor') updateColorPreview('panel', value);
+                if (key === 'borderColor') updateColorPreview('border', value);
+                if (appState.isImageLoaded) draw();
+            }
+
+            function updateColorPreview(type, color) {
+                const previewEl = type === 'panel' ? panelColorPreview : borderColorPreview;
+                previewEl.style.backgroundColor = color;
             }
             
             function initializeVerticesAndPanels() {
@@ -243,23 +296,18 @@
                 for (let i = 0; i < rows; i++) {
                     for (let j = 0; j < cols; j++) {
                         const topLeft = i * (cols + 1) + j;
-                        const topRight = topLeft + 1;
-                        const bottomLeft = (i + 1) * (cols + 1) + j;
-                        const bottomRight = bottomLeft + 1;
                         appState.panels.push({
-                            vertexIndices: [topLeft, topRight, bottomRight, bottomLeft],
+                            vertexIndices: [topLeft, topLeft + 1, topLeft + cols + 2, topLeft + cols + 1],
                         });
                     }
                 }
             }
 
             function draw() {
-                if (!appState.image.element.src) return;
+                if (!appState.isImageLoaded) return;
                 svgContainer.innerHTML = '';
-                const { displayWidth, displayHeight } = appState.image;
-                svgContainer.setAttribute('viewBox', `0 0 ${displayWidth} ${displayHeight}`);
+                svgContainer.setAttribute('viewBox', `0 0 ${appState.image.displayWidth} ${appState.image.displayHeight}`);
 
-                // パネル（polygon）を描画
                 appState.panels.forEach(panel => {
                     const points = panel.vertexIndices.map(i => `${appState.vertices[i].x},${appState.vertices[i].y}`).join(' ');
                     const polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
@@ -270,50 +318,48 @@
                     svgContainer.appendChild(polygon);
                 });
 
-                // 頂点ハンドル（circle）を描画
                 appState.vertices.forEach((vertex, index) => {
                     const handle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
                     handle.setAttribute('cx', vertex.x);
                     handle.setAttribute('cy', vertex.y);
                     handle.setAttribute('r', vertex.isLocked ? '6' : '7');
-                    handle.setAttribute('fill', vertex.isLocked ? var(--gray-dark) : 'var(--purple-mid)');
+                    handle.setAttribute('fill', vertex.isLocked ? 'var(--gray-dark)' : 'var(--purple-mid)');
                     handle.classList.add('vertex-handle');
                     if (vertex.isLocked) handle.classList.add('locked');
-
-                    handle.onmousedown = (e) => {
-                        if (vertex.isLocked) return;
-                        e.preventDefault();
-                        appState.draggingVertexIndex = index;
-                    };
+                    
+                    handle.addEventListener('mousedown', (e) => startDrag(e, index));
                     svgContainer.appendChild(handle);
                 });
                 switchMode(editModeBtn.classList.contains('active') ? 'edit' : 'preview');
             }
 
-            panelArea.onmousemove = (e) => {
+            function startDrag(event, index) {
+                if (appState.vertices[index].isLocked) return;
+                event.preventDefault();
+                appState.draggingVertexIndex = index;
+            }
+
+            function handleDrag(event) {
                 if (appState.draggingVertexIndex === null) return;
-                e.preventDefault();
-                
-                const svgPoint = getSVGPoint(e.clientX, e.clientY);
+                event.preventDefault();
+                const svgPoint = getSVGPoint(event.clientX, event.clientY);
                 const vertex = appState.vertices[appState.draggingVertexIndex];
-                
                 vertex.x = svgPoint.x;
                 vertex.y = svgPoint.y;
-                
                 draw();
             };
 
-            window.onmouseup = () => {
+            function endDrag() {
                 appState.draggingVertexIndex = null;
             };
             
             function getSVGPoint(clientX, clientY) {
                 const CTM = svgContainer.getScreenCTM();
-                return {
-                    x: (clientX - CTM.e) / CTM.a,
-                    y: (clientY - CTM.f) / CTM.d
-                };
+                return CTM ? { x: (clientX - CTM.e) / CTM.a, y: (clientY - CTM.f) / CTM.d } : {x:0, y:0};
             }
+
+            // --- 実行 ---
+            initialize();
         });
     </script>
 </body>
