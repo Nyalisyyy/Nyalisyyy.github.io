@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IRIAMパネル開けツール</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap" rel="stylesheet">
+    <style>
+        /* --- 基本変数 (デザイン仕様書より) --- */
+        :root {
+            --purple-light: #d2baff;
+            --purple-mid: #a78bfa;
+            --purple-dark: #8e7de4;
+            --blue-light: #bde0fe;
+            --blue-dark: #88a4e8;
+            --orange-start: #f6d365;
+            --orange-end: #fda085;
+            --text-dark: #555;
+            --text-light: #777;
+            --gray-dark: #8f9da8;
+            --green-mid: #2ecc71;
+        }
+
+        /* --- 基本レイアウト (デザイン仕様書より) --- */
+        html {
+            box-sizing: border-box;
+        }
+        *, *:before, *:after {
+            box-sizing: inherit;
+        }
+        body {
+            font-family: 'M PLUS Rounded 1c', sans-serif;
+            background: linear-gradient(135deg, var(--purple-light) 0%, var(--blue-light) 100%);
+            color: var(--text-dark);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* 上寄せに変更 */
+        }
+
+        /* --- メインコンテナ --- */
+        .tool-container {
+            background-color: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            border: 2px solid #ffffff;
+            border-radius: 24px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 1200px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* --- ヘッダーとモード切替 --- */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 20px;
+        }
+
+        .header h1 {
+            color: var(--purple-dark);
+            font-weight: 800;
+            font-size: 2rem;
+            margin: 0;
+        }
+
+        .mode-switcher {
+            display: flex;
+            background-color: rgba(0,0,0,0.05);
+            border-radius: 12px;
+            padding: 5px;
+        }
+
+        .mode-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 1rem;
+            font-family: 'M PLUS Rounded 1c', sans-serif;
+            background-color: transparent;
+            color: var(--text-light);
+            transition: all 0.3s;
+        }
+
+        .mode-btn.active {
+            color: white;
+            background: linear-gradient(45deg, var(--orange-start), var(--orange-end));
+            box-shadow: 0 4px 10px rgba(253, 160, 133, 0.4);
+        }
+
+        /* --- メインコンテンツエリア --- */
+        .main-content {
+            display: flex;
+            gap: 20px;
+            min-height: 60vh;
+        }
+
+        /* --- パネル表示エリア --- */
+        .panel-area {
+            flex-grow: 1;
+            background-color: #e9ecef;
+            border-radius: 16px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            gap: 15px;
+            position: relative;
+            overflow: hidden;
+            border: 2px dashed var(--gray-dark);
+        }
+        .panel-area-placeholder p {
+             margin:0;
+             font-weight: 700;
+             color: var(--gray-dark);
+        }
+
+        /* --- サイドバー (設定エリア) --- */
+        .sidebar {
+            width: 320px;
+            flex-shrink: 0;
+            background-color: rgba(255, 255, 255, 0.7);
+            border-radius: 16px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .sidebar h2 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--purple-dark);
+            margin: 0;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #eee;
+        }
+        
+        .setting-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .setting-group label {
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+        
+        .setting-group input[type="number"],
+        .setting-group input[type="text"],
+        .setting-group select {
+            width: 100%;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            font-family: 'M PLUS Rounded 1c', sans-serif;
+            font-size: 1rem;
+        }
+
+        /* --- プレビューモード専用スタイル --- */
+        .preview-sidebar {
+            display: none; /* 初期状態では非表示 */
+        }
+        
+        /* --- 汎用ボタン (デザイン仕様書より) --- */
+        .btn-primary {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 1rem;
+            font-family: 'M PLUS Rounded 1c', sans-serif;
+            text-decoration: none;
+            display: inline-block;
+            color: white;
+            transition: all 0.3s;
+            background: linear-gradient(45deg, var(--orange-start), var(--orange-end));
+            box-shadow: 0 5px 15px rgba(253, 160, 133, 0.4);
+            text-align: center;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(253, 160, 133, 0.5);
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="tool-container">
+        <header class="header">
+            <h1>IRIAMパネル開けツール</h1>
+            <div class="mode-switcher">
+                <button id="edit-mode-btn" class="mode-btn active">編集モード</button>
+                <button id="preview-mode-btn" class="mode-btn">プレビュー</button>
+            </div>
+        </header>
+
+        <div class="main-content">
+            <main class="panel-area" id="panel-area">
+                <div class="panel-area-placeholder" id="panel-placeholder">
+                    <p>ここに背景となる一枚絵をアップロードしてください</p>
+                    <input type="file" id="image-upload" accept="image/*" style="display: none;">
+                    <button id="upload-btn" class="btn-primary">画像を選択</button>
+                </div>
+                 </main>
+
+            <aside class="sidebar" id="edit-sidebar">
+                <h2>⚙️ 編集設定</h2>
+                
+                <div class="setting-group">
+                    <label for="panel-cols">パネルの数（横）</label>
+                    <input type="number" id="panel-cols" value="3" min="1">
+                </div>
+                <div class="setting-group">
+                    <label for="panel-rows">パネルの数（縦）</label>
+                    <input type="number" id="panel-rows" value="3" min="1">
+                </div>
+
+                <hr>
+                
+                <div id="panel-specific-settings" style="display: none;">
+                    <h3>選択中のパネル</h3>
+                     <div class="setting-group">
+                        <label for="panel-condition">条件</label>
+                        <input type="text" id="panel-condition" placeholder="例:「いいね」100個">
+                    </div>
+                     <div class="setting-group">
+                        <label for="panel-goal">目標値</label>
+                        <input type="number" id="panel-goal" value="100" min="1">
+                    </div>
+                </div>
+
+                <hr>
+                <h2>🎨 全体のデザイン</h2>
+                 <div class="setting-group">
+                    <label for="panel-color">パネルの色</label>
+                    <input type="color" id="panel-color" value="#a78bfa">
+                </div>
+                 <div class="setting-group">
+                    <label for="border-color">線の色</label>
+                    <input type="color" id="border-color" value="#ffffff">
+                </div>
+                <div class="setting-group">
+                    <label for="font-select">フォント</label>
+                    <select id="font-select">
+                        <option value="'M PLUS Rounded 1c', sans-serif">M PLUS Rounded 1c</option>
+                        <option value="'Arial', sans-serif">Arial</option>
+                        <option value="'Verdana', sans-serif">Verdana</option>
+                        <option value="'Times New Roman', serif">Times New Roman</option>
+                    </select>
+                </div>
+
+            </aside>
+            
+            <aside class="sidebar preview-sidebar" id="preview-sidebar">
+                <h2>📊 進捗状況</h2>
+                <div id="progress-list">
+                    </div>
+                <hr>
+                <button id="save-image-btn" class="btn-primary">進捗を画像で保存</button>
+            </aside>
+        </div>
+    </div>
+
+    <script>
+        // ここにアプリケーションのロジックを記述していきます。
+        document.addEventListener('DOMContentLoaded', () => {
+            const editModeBtn = document.getElementById('edit-mode-btn');
+            const previewModeBtn = document.getElementById('preview-mode-btn');
+            const editSidebar = document.getElementById('edit-sidebar');
+            const previewSidebar = document.getElementById('preview-sidebar');
+            const uploadButton = document.getElementById('upload-btn');
+            const imageUploadInput = document.getElementById('image-upload');
+
+            // モード切替機能
+            function switchMode(mode) {
+                if (mode === 'edit') {
+                    editModeBtn.classList.add('active');
+                    previewModeBtn.classList.remove('active');
+                    editSidebar.style.display = 'flex';
+                    previewSidebar.style.display = 'none';
+                    // TODO: 編集モード用のロジックを追加
+                } else { // preview
+                    previewModeBtn.classList.add('active');
+                    editModeBtn.classList.remove('active');
+                    previewSidebar.style.display = 'flex';
+                    editSidebar.style.display = 'none';
+                    // TODO: プレビューモード用のロジックを追加
+                }
+            }
+
+            editModeBtn.addEventListener('click', () => switchMode('edit'));
+            previewModeBtn.addEventListener('click', () => switchMode('preview'));
+            
+            // 画像アップロードボタンの動作
+            uploadButton.addEventListener('click', () => {
+                imageUploadInput.click();
+            });
+            
+            // TODO: 画像が選択されたときの処理
+            // TODO: パネル生成の処理
+            // TODO: パネル変形の処理
+            // TODO: 設定変更の処理
+            // TODO: 進捗更新の処理
+            // TODO: 画像保存の処理
+            
+            // 初期化
+            switchMode('edit');
+        });
+
+    </script>
+</body>
+</html>
