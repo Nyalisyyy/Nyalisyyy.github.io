@@ -3,215 +3,95 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IRIAMパネル開けツール (v0.2)</title>
+    <title>IRIAMパネル開けツール (v0.3)</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap" rel="stylesheet">
     <style>
-        /* --- 基本変数 (デザイン仕様書より) --- */
         :root {
-            --purple-light: #d2baff;
-            --purple-mid: #a78bfa;
-            --purple-dark: #8e7de4;
-            --blue-light: #bde0fe;
-            --blue-dark: #88a4e8;
-            --orange-start: #f6d365;
-            --orange-end: #fda085;
-            --text-dark: #555;
-            --text-light: #777;
-            --gray-dark: #8f9da8;
-            --green-mid: #2ecc71;
+            --purple-light: #d2baff; --purple-mid: #a78bfa; --purple-dark: #8e7de4;
+            --blue-light: #bde0fe; --blue-dark: #88a4e8; --orange-start: #f6d365;
+            --orange-end: #fda085; --text-dark: #555; --text-light: #777;
+            --gray-dark: #8f9da8; --green-mid: #2ecc71;
         }
-
-        /* --- 基本レイアウト (デザイン仕様書より) --- */
         html { box-sizing: border-box; }
         *, *:before, *:after { box-sizing: inherit; }
         body {
             font-family: 'M PLUS Rounded 1c', sans-serif;
             background: linear-gradient(135deg, var(--purple-light) 0%, var(--blue-light) 100%);
-            color: var(--text-dark);
-            margin: 0;
-            padding: 20px;
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
+            color: var(--text-dark); margin: 0; padding: 20px; min-height: 100vh;
+            display: flex; justify-content: center; align-items: flex-start;
         }
-
-        /* --- メインコンテナ --- */
         .tool-container {
-            background-color: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(10px);
-            border: 2px solid #ffffff;
-            border-radius: 24px;
-            padding: 30px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            width: 100%;
-            max-width: 1200px;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
+            background-color: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px);
+            border: 2px solid #ffffff; border-radius: 24px; padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1); width: 100%; max-width: 1200px;
+            display: flex; flex-direction: column; gap: 20px;
         }
-
-        /* --- ヘッダーとモード切替 --- */
         .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 2px solid #eee;
-            padding-bottom: 20px;
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 2px solid #eee; padding-bottom: 20px;
         }
-        .header h1 {
-            color: var(--purple-dark);
-            font-weight: 800;
-            font-size: 2rem;
-            margin: 0;
-        }
-        .mode-switcher {
-            display: flex;
-            background-color: rgba(0,0,0,0.05);
-            border-radius: 12px;
-            padding: 5px;
-        }
+        .header h1 { color: var(--purple-dark); font-weight: 800; font-size: 2rem; margin: 0; }
+        .mode-switcher { display: flex; background-color: rgba(0,0,0,0.05); border-radius: 12px; padding: 5px; }
         .mode-btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 700;
-            font-size: 1rem;
-            font-family: 'M PLUS Rounded 1c', sans-serif;
-            background-color: transparent;
-            color: var(--text-light);
-            transition: all 0.3s;
+            padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: 700;
+            font-size: 1rem; font-family: 'M PLUS Rounded 1c', sans-serif; background-color: transparent;
+            color: var(--text-light); transition: all 0.3s;
         }
         .mode-btn.active {
-            color: white;
-            background: linear-gradient(45deg, var(--orange-start), var(--orange-end));
+            color: white; background: linear-gradient(45deg, var(--orange-start), var(--orange-end));
             box-shadow: 0 4px 10px rgba(253, 160, 133, 0.4);
         }
-
-        /* --- メインコンテンツエリア --- */
-        .main-content {
-            display: flex;
-            gap: 20px;
-            min-height: 60vh;
-        }
-
-        /* --- パネル表示エリア --- */
+        .main-content { display: flex; gap: 20px; min-height: 60vh; }
         .panel-area {
-            flex-grow: 1;
-            background-color: #e9ecef;
-            border-radius: 16px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            position: relative;
-            overflow: hidden;
+            flex-grow: 1; background-color: #e9ecef; border-radius: 16px;
+            display: flex; justify-content: center; align-items: center;
+            position: relative; overflow: hidden;
         }
-        #panel-placeholder {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            align-items: center;
-            color: var(--gray-dark);
-        }
+        #panel-placeholder { display: flex; flex-direction: column; gap: 15px; align-items: center; color: var(--gray-dark); }
         #panel-placeholder p { margin:0; font-weight: 700; }
-        
-        #uploaded-image {
-            max-width: 100%;
-            max-height: 100%;
-            object-fit: contain;
-            display: none; /* 初期状態は非表示 */
-        }
-
-        #panel-svg-container {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-        }
-
-        /* --- サイドバー (設定エリア) --- */
+        #uploaded-image { max-width: 100%; max-height: 100%; object-fit: contain; display: none; }
+        #panel-svg-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+        .vertex-handle { cursor: move; transition: r 0.2s, fill 0.2s; }
+        .vertex-handle:hover { r: 8px !important; fill: var(--orange-end); }
+        .vertex-handle.locked { cursor: not-allowed; }
+        .vertex-handle.locked:hover { r: 6px !important; fill: var(--gray-dark); }
         .sidebar {
-            width: 320px;
-            flex-shrink: 0;
-            background-color: rgba(255, 255, 255, 0.7);
-            border-radius: 16px;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
+            width: 320px; flex-shrink: 0; background-color: rgba(255, 255, 255, 0.7);
+            border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 20px;
         }
         .sidebar h2 {
-            font-size: 1.4rem;
-            font-weight: 700;
-            color: var(--purple-dark);
-            margin: 0;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #eee;
+            font-size: 1.4rem; font-weight: 700; color: var(--purple-dark);
+            margin: 0; padding-bottom: 10px; border-bottom: 2px solid #eee;
         }
-        .setting-group {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
+        .setting-group { display: flex; flex-direction: column; gap: 10px; }
         .setting-group label { font-weight: 700; font-size: 0.9rem; }
         .setting-group input, .setting-group select {
-            width: 100%;
-            padding: 10px;
-            border-radius: 8px;
-            border: 1px solid #ccc;
-            font-family: 'M PLUS Rounded 1c', sans-serif;
-            font-size: 1rem;
+            width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc;
+            font-family: 'M PLUS Rounded 1c', sans-serif; font-size: 1rem;
         }
-        .setting-group input[type="color"] {
-            padding: 0;
-            height: 40px;
-            background: none;
-            border: none;
-            cursor: pointer;
-        }
-
-        /* --- プレビューモード専用スタイル --- */
+        .setting-group input[type="color"] { padding: 0; height: 40px; background: none; border: none; cursor: pointer; }
         .preview-sidebar { display: none; }
-        
-        /* --- 汎用ボタン --- */
         .btn-primary {
-            padding: 12px 24px;
-            border: none;
-            border-radius: 12px;
-            cursor: pointer;
-            font-weight: 700;
-            font-size: 1rem;
-            font-family: 'M PLUS Rounded 1c', sans-serif;
-            text-decoration: none;
-            display: inline-block;
-            color: white;
-            transition: all 0.3s;
+            padding: 12px 24px; border: none; border-radius: 12px; cursor: pointer; font-weight: 700;
+            font-size: 1rem; font-family: 'M PLUS Rounded 1c', sans-serif; text-decoration: none;
+            display: inline-block; color: white; transition: all 0.3s;
             background: linear-gradient(45deg, var(--orange-start), var(--orange-end));
-            box-shadow: 0 5px 15px rgba(253, 160, 133, 0.4);
-            text-align: center;
+            box-shadow: 0 5px 15px rgba(253, 160, 133, 0.4); text-align: center;
         }
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(253, 160, 133, 0.5);
-        }
-
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(253, 160, 133, 0.5); }
     </style>
 </head>
 <body>
-
     <div class="tool-container">
         <header class="header">
-            <h1>IRIAMパネル開けツール (v0.2)</h1>
+            <h1>IRIAMパネル開けツール (v0.3)</h1>
             <div class="mode-switcher">
                 <button id="edit-mode-btn" class="mode-btn active">編集モード</button>
                 <button id="preview-mode-btn" class="mode-btn">プレビュー</button>
             </div>
         </header>
-
         <div class="main-content">
             <main class="panel-area" id="panel-area">
                 <div class="panel-area-placeholder" id="panel-placeholder">
@@ -222,10 +102,8 @@
                  <img id="uploaded-image" />
                  <svg id="panel-svg-container"></svg>
             </main>
-
             <aside class="sidebar" id="edit-sidebar">
                 <h2>⚙️ 編集設定</h2>
-                
                 <div class="setting-group">
                     <label for="panel-cols">パネルの数（横）</label>
                     <input type="number" id="panel-cols" value="3" min="1">
@@ -235,35 +113,14 @@
                     <input type="number" id="panel-rows" value="3" min="1">
                 </div>
                 <hr>
-                <div id="panel-specific-settings" style="display: none;">
-                    <h3>選択中のパネル</h3>
-                     <div class="setting-group">
-                        <label for="panel-condition">条件</label>
-                        <input type="text" id="panel-condition" placeholder="例:「いいね」100個">
-                    </div>
-                     <div class="setting-group">
-                        <label for="panel-goal">目標値</label>
-                        <input type="number" id="panel-goal" value="100" min="1">
-                    </div>
-                </div>
-                <hr>
                 <h2>🎨 全体のデザイン</h2>
-                 <div class="setting-group">
+                <div class="setting-group">
                     <label for="panel-color">パネルの色</label>
                     <input type="color" id="panel-color" value="#a78bfa">
                 </div>
-                 <div class="setting-group">
+                <div class="setting-group">
                     <label for="border-color">線の色</label>
                     <input type="color" id="border-color" value="#ffffff">
-                </div>
-                <div class="setting-group">
-                    <label for="font-select">フォント</label>
-                    <select id="font-select">
-                        <option value="'M PLUS Rounded 1c', sans-serif">M PLUS Rounded 1c</option>
-                        <option value="'Arial', sans-serif">Arial</option>
-                        <option value="'Verdana', sans-serif">Verdana</option>
-                        <option value="'Times New Roman', serif">Times New Roman</option>
-                    </select>
                 </div>
             </aside>
             <aside class="sidebar preview-sidebar" id="preview-sidebar">
@@ -277,128 +134,186 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // --- DOM要素の取得 ---
-            const imageUploadInput = document.getElementById('image-upload-input');
-            const uploadBtn = document.getElementById('upload-btn');
-            const panelPlaceholder = document.getElementById('panel-placeholder');
-            const uploadedImage = document.getElementById('uploaded-image');
-            const svgContainer = document.getElementById('panel-svg-container');
-            
-            const colsInput = document.getElementById('panel-cols');
-            const rowsInput = document.getElementById('panel-rows');
-            const panelColorInput = document.getElementById('panel-color');
-            const borderColorInput = document.getElementById('border-color');
+            // --- DOM要素 ---
+            const imageUploadInput = document.getElementById('image-upload-input'), uploadBtn = document.getElementById('upload-btn');
+            const panelPlaceholder = document.getElementById('panel-placeholder'), uploadedImage = document.getElementById('uploaded-image');
+            const svgContainer = document.getElementById('panel-svg-container'), panelArea = document.getElementById('panel-area');
+            const colsInput = document.getElementById('panel-cols'), rowsInput = document.getElementById('panel-rows');
+            const panelColorInput = document.getElementById('panel-color'), borderColorInput = document.getElementById('border-color');
+            const editModeBtn = document.getElementById('edit-mode-btn'), previewModeBtn = document.getElementById('preview-mode-btn');
+            const editSidebar = document.getElementById('edit-sidebar'), previewSidebar = document.getElementById('preview-sidebar');
 
-            // --- 状態管理オブジェクト ---
+            // --- 状態管理 ---
             const appState = {
-                image: {
-                    element: uploadedImage,
-                    width: 0,
-                    height: 0,
-                },
-                grid: {
-                    cols: 3,
-                    rows: 3,
-                },
-                settings: {
-                    panelColor: '#a78bfa',
-                    borderColor: '#ffffff',
-                },
-                panels: [],
+                image: { element: uploadedImage, width: 0, height: 0, displayWidth: 0, displayHeight: 0 },
+                grid: { cols: 3, rows: 3 },
+                settings: { panelColor: '#a78bfa', borderColor: '#ffffff' },
+                vertices: [], // {x, y, isLocked}
+                panels: [], // { vertexIndices: [idx1, idx2, idx3, idx4] }
+                draggingVertexIndex: null,
             };
 
             // --- イベントリスナー ---
             uploadBtn.addEventListener('click', () => imageUploadInput.click());
             imageUploadInput.addEventListener('change', handleImageUpload);
-            
             colsInput.addEventListener('input', (e) => updateGrid('cols', e.target.value));
             rowsInput.addEventListener('input', (e) => updateGrid('rows', e.target.value));
-            panelColorInput.addEventListener('input', (e) => updateSetting('panelColor', e.target.value));
-            borderColorInput.addEventListener('input', (e) => updateSetting('borderColor', e.target.value));
-
+            panelColorInput.addEventListener('input', (e) => updateAndRedraw({ key: 'panelColor', value: e.target.value }));
+            borderColorInput.addEventListener('input', (e) => updateAndRedraw({ key: 'borderColor', value: e.target.value }));
+            editModeBtn.addEventListener('click', () => switchMode('edit'));
+            previewModeBtn.addEventListener('click', () => switchMode('preview'));
+            
             // --- 関数 ---
+            function switchMode(mode) {
+                const isEdit = mode === 'edit';
+                editModeBtn.classList.toggle('active', isEdit);
+                previewModeBtn.classList.toggle('active', !isEdit);
+                editSidebar.style.display = isEdit ? 'flex' : 'none';
+                previewSidebar.style.display = !isEdit ? 'flex' : 'none';
+                
+                // 編集モードではハンドルを表示、プレビューでは非表示
+                const handles = svgContainer.querySelectorAll('.vertex-handle');
+                handles.forEach(h => h.style.display = isEdit ? 'block' : 'none');
+            }
 
-            // 画像がアップロードされたときの処理
             function handleImageUpload(event) {
                 const file = event.target.files[0];
                 if (!file) return;
-
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     const img = appState.image.element;
                     img.src = e.target.result;
                     img.onload = () => {
-                        // 画像の表示とコンテナのサイズ調整
                         panelPlaceholder.style.display = 'none';
                         img.style.display = 'block';
+                        appState.image.width = img.naturalWidth;
+                        appState.image.height = img.naturalHeight;
                         
-                        // 画像の表示サイズを取得してSVGのサイズを合わせる
-                        const rect = img.getBoundingClientRect();
-                        appState.image.width = rect.width;
-                        appState.image.height = rect.height;
-                        
-                        drawPanels();
+                        // 表示サイズを再計算してリセット
+                        resetAndDraw();
+                        // ウィンドウリサイズ時にも再計算
+                        window.onresize = () => resetAndDraw();
                     };
                 };
                 reader.readAsDataURL(file);
             }
 
-            // グリッド設定の更新
+            function resetAndDraw() {
+                if (!appState.image.element.src) return;
+                
+                // 画像の表示サイズを取得
+                const rect = appState.image.element.getBoundingClientRect();
+                appState.image.displayWidth = rect.width;
+                appState.image.displayHeight = rect.height;
+
+                initializeVerticesAndPanels();
+                draw();
+            }
+
             function updateGrid(key, value) {
                 const num = parseInt(value, 10);
                 if (num > 0) {
                     appState.grid[key] = num;
-                    drawPanels();
+                    resetAndDraw();
                 }
             }
-            
-            // デザイン設定の更新
-            function updateSetting(key, value) {
+
+            function updateAndRedraw({key, value}) {
                 appState.settings[key] = value;
-                drawPanels();
+                draw();
             }
-
-            // パネルを描画するメイン関数
-            function drawPanels() {
-                if (!appState.image.element.src) return;
-
-                // SVGコンテナをクリア
-                svgContainer.innerHTML = '';
-
-                const { width, height } = appState.image;
+            
+            function initializeVerticesAndPanels() {
+                appState.vertices = [];
+                appState.panels = [];
                 const { cols, rows } = appState.grid;
-                
-                // SVGのサイズと viewBox を設定
-                svgContainer.setAttribute('viewBox', `0 0 ${width} ${height}`);
+                const { displayWidth, displayHeight } = appState.image;
 
-                const panelWidth = width / cols;
-                const panelHeight = height / rows;
+                for (let i = 0; i <= rows; i++) {
+                    for (let j = 0; j <= cols; j++) {
+                        const isLocked = i === 0 || i === rows || j === 0 || j === cols;
+                        appState.vertices.push({
+                            x: (j / cols) * displayWidth,
+                            y: (i / rows) * displayHeight,
+                            isLocked: isLocked,
+                        });
+                    }
+                }
 
                 for (let i = 0; i < rows; i++) {
                     for (let j = 0; j < cols; j++) {
-                        const x = j * panelWidth;
-                        const y = i * panelHeight;
-
-                        // SVGのrect要素（パネル）を作成
-                        const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-                        rect.setAttribute('x', x);
-                        rect.setAttribute('y', y);
-                        rect.setAttribute('width', panelWidth);
-                        rect.setAttribute('height', panelHeight);
-                        rect.setAttribute('fill', appState.settings.panelColor);
-                        rect.setAttribute('stroke', appState.settings.borderColor);
-                        rect.setAttribute('stroke-width', '2');
-                        
-                        svgContainer.appendChild(rect);
+                        const topLeft = i * (cols + 1) + j;
+                        const topRight = topLeft + 1;
+                        const bottomLeft = (i + 1) * (cols + 1) + j;
+                        const bottomRight = bottomLeft + 1;
+                        appState.panels.push({
+                            vertexIndices: [topLeft, topRight, bottomRight, bottomLeft],
+                        });
                     }
                 }
             }
 
-            // 初期化（ダミー、モード切替などは後ほど実装）
-             const editModeBtn = document.getElementById('edit-mode-btn');
-             const previewModeBtn = document.getElementById('preview-mode-btn');
-             editModeBtn.addEventListener('click', () => {});
-             previewModeBtn.addEventListener('click', () => {});
+            function draw() {
+                if (!appState.image.element.src) return;
+                svgContainer.innerHTML = '';
+                const { displayWidth, displayHeight } = appState.image;
+                svgContainer.setAttribute('viewBox', `0 0 ${displayWidth} ${displayHeight}`);
+
+                // パネル（polygon）を描画
+                appState.panels.forEach(panel => {
+                    const points = panel.vertexIndices.map(i => `${appState.vertices[i].x},${appState.vertices[i].y}`).join(' ');
+                    const polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+                    polygon.setAttribute('points', points);
+                    polygon.setAttribute('fill', appState.settings.panelColor);
+                    polygon.setAttribute('stroke', appState.settings.borderColor);
+                    polygon.setAttribute('stroke-width', '2');
+                    svgContainer.appendChild(polygon);
+                });
+
+                // 頂点ハンドル（circle）を描画
+                appState.vertices.forEach((vertex, index) => {
+                    const handle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                    handle.setAttribute('cx', vertex.x);
+                    handle.setAttribute('cy', vertex.y);
+                    handle.setAttribute('r', vertex.isLocked ? '6' : '7');
+                    handle.setAttribute('fill', vertex.isLocked ? var(--gray-dark) : 'var(--purple-mid)');
+                    handle.classList.add('vertex-handle');
+                    if (vertex.isLocked) handle.classList.add('locked');
+
+                    handle.onmousedown = (e) => {
+                        if (vertex.isLocked) return;
+                        e.preventDefault();
+                        appState.draggingVertexIndex = index;
+                    };
+                    svgContainer.appendChild(handle);
+                });
+                switchMode(editModeBtn.classList.contains('active') ? 'edit' : 'preview');
+            }
+
+            panelArea.onmousemove = (e) => {
+                if (appState.draggingVertexIndex === null) return;
+                e.preventDefault();
+                
+                const svgPoint = getSVGPoint(e.clientX, e.clientY);
+                const vertex = appState.vertices[appState.draggingVertexIndex];
+                
+                vertex.x = svgPoint.x;
+                vertex.y = svgPoint.y;
+                
+                draw();
+            };
+
+            window.onmouseup = () => {
+                appState.draggingVertexIndex = null;
+            };
+            
+            function getSVGPoint(clientX, clientY) {
+                const CTM = svgContainer.getScreenCTM();
+                return {
+                    x: (clientX - CTM.e) / CTM.a,
+                    y: (clientY - CTM.f) / CTM.d
+                };
+            }
         });
     </script>
 </body>
