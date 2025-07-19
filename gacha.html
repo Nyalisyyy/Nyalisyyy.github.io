@@ -5,6 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <title>IRIAM配信用ガチャツール</title>
+
+    <link rel="manifest" href="manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#a78bfa">
+    
     <meta name="author" content="にゃる @Nyalisyyy">
     <meta name="description" content="IRIAM（イリアム）などの配信用に使える高機能ガチャツール。景品、レアリティ、確率を自由に設定でき、履歴管理やSNSシェアも可能です。">
     
@@ -608,6 +614,20 @@
 
             loadAll();
         });
+    </script>
+
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+              navigator.serviceWorker.register('./sw.js')
+                .then(registration => {
+                  console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                })
+                .catch(err => {
+                  console.log('ServiceWorker registration failed: ', err);
+                });
+            });
+          }
     </script>
 </body>
 </html>
