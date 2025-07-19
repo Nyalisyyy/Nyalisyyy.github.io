@@ -1,0 +1,21 @@
+{
+  "name": "IRIAM配信用ガチャツール",
+  "short_name": "ガチャツール",
+  "description": "IRIAM（イリアム）などの配信用に使える高機能ガチャツール。",
+  "start_url": "./gacha.html",
+  "display": "standalone",
+  "background_color": "#d2baff",
+  "theme_color": "#a78bfa",
+  "icons": [
+    {
+      "src": "./logo.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "./logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
