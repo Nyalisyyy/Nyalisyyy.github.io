@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>制作料金シミュレーター</title>
+    <style>
+        :root {
+            --primary-color: #4a90e2;
+            --bg-color: #f5f7fa;
+            --card-bg: #ffffff;
+            --text-color: #333333;
+            --border-radius: 12px;
+        }
+
+        body {
+            font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+        }
+
+        .container {
+            background-color: var(--card-bg);
+            padding: 40px;
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            max-width: 600px;
+            width: 100%;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 24px;
+            margin-bottom: 30px;
+            color: var(--text-color);
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 20px;
+        }
+
+        .form-group:last-child {
+            border-bottom: none;
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        select, input[type="number"] {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            box-sizing: border-box;
+            background-color: #fafafa;
+        }
+
+        .radio-group, .checkbox-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .radio-option, .checkbox-option {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            padding: 10px;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+
+        .radio-option:hover, .checkbox-option:hover {
+            background-color: #f0f7ff;
+            border-color: var(--primary-color);
+        }
+
+        input[type="radio"], input[type="checkbox"] {
+            margin-right: 12px;
+            transform: scale(1.2);
+            accent-color: var(--primary-color);
+        }
+
+        .price-tag {
+            margin-left: auto;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .total-section {
+            background-color: #2c3e50;
+            color: white;
+            padding: 20px;
+            border-radius: var(--border-radius);
+            text-align: center;
+            position: sticky;
+            bottom: 20px;
+            margin-top: 20px;
+        }
+
+        .total-label {
+            font-size: 14px;
+            opacity: 0.8;
+            margin-bottom: 5px;
+        }
+
+        .total-price {
+            font-size: 32px;
+            font-weight: bold;
+        }
+
+        .note {
+            font-size: 12px;
+            color: #888;
+            margin-top: 5px;
+        }
+
+        /* 数値入力エリアの調整 */
+        .number-input-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .number-input-row label {
+            margin-bottom: 0;
+            font-weight: normal;
+        }
+        .number-input-row input {
+            width: 80px;
+            text-align: right;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>料金シミュレーター</h1>
+
+    <div class="form-group">
+        <label for="serviceType">ご依頼内容を選択</label>
+        <select id="serviceType" onchange="updateForm()">
+            <option value="iriam">IRIAM対応立ち絵</option>
+            <option value="illustration">一枚絵制作</option>
+            <option value="icon">アイコン制作</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label>基本プラン</label>
+        <div id="planContainer" class="radio-group">
+            </div>
+    </div>
+
+    <div class="form-group">
+        <label>描画人数</label>
+        <div class="number-input-row">
+            <span>人数（基本料金 × 人数）</span>
+            <input type="number" id="peopleCount" value="1" min="1" onchange="calculate()">
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label>オプション選択</label>
+        <div id="optionsContainer" class="checkbox-group">
+            </div>
+    </div>
+
+    <div class="form-group">
+        <label>追加・数量オプション</label>
+        <div id="numberOptionsContainer">
+            </div>
+    </div>
+
+    <div class="form-group">
+        <label>権利・その他</label>
+        <div id="rightsContainer" class="checkbox-group">
+            </div>
+        <p class="note">※権利関係の％はお見積り合計金額に対して加算されます。</p>
+    </div>
+
+    <div class="total-section">
+        <div class="total-label">概算お見積り金額</div>
+        <div class="total-price">¥<span id="totalPrice">0</span></div>
+    </div>
+</div>
+
+<script>
+    // データ定義
+    const services = {
+        iriam: {
+            name: "IRIAM対応立ち絵",
+            plans: [
+                { name: "全身", price: 9000 },
+                { name: "IRIAM ver.3向け", price: 9000 },
+                { name: "Vtuber向けパーツ分け(全身)", price: 40000 }
+            ],
+            options: [
+                { id: "bg_simple", name: "背景(簡易)", price: 2000 },
+                { id: "bg_complex", name: "背景(複雑)", price: 3000 },
+                { id: "ver2_fix", name: "IRIAM ver.2向け修正", price: 3000 }
+            ],
+            countOptions: [
+                { id: "props", name: "小物", price: 1000, unit: "点" },
+                { id: "face_diff", name: "表情差分", price: 500, unit: "種" },
+                { id: "pose_diff", name: "服装/ポーズ等大きな差分", price: 2000, unit: "種" }
+            ],
+            multipliers: [
+                { id: "nda", name: "実績公開不可 (+100%)", rate: 1.0 },
+                { id: "copyright", name: "著作権譲渡 (+150%)", rate: 1.5 }
+            ]
+        },
+        illustration: {
+            name: "一枚絵制作",
+            plans: [
+                { name: "バストアップ", price: 7000 },
+                { name: "膝上", price: 8000 },
+                { name: "全身", price: 9000 }
+            ],
+            options: [
+                { id: "bg_simple", name: "背景(簡易)", price: 2000 },
+                { id: "bg_complex", name: "背景(複雑)", price: 3000 }
+            ],
+            countOptions: [
+                { id: "props", name: "小物", price: 1000, unit: "点" },
+                { id: "face_diff", name: "表情差分", price: 500, unit: "種" },
+                { id: "pose_diff", name: "服装/ポーズ等大きな差分", price: 2000, unit: "種" }
+            ],
+            // 一枚絵の項目には著作権譲渡等の記載が明記されていないため、標準では非表示または空にします
+            multipliers: [] 
+        },
+        icon: {
+            name: "アイコン制作",
+            plans: [
+                { name: "バストアップ", price: 7000 },
+                { name: "膝上", price: 8000 },
+                { name: "全身", price: 9000 }
+            ],
+            options: [
+                { id: "bg_simple", name: "背景(簡易)", price: 2000 },
+                { id: "bg_complex", name: "背景(複雑)", price: 3000 },
+                { id: "wide_fix", name: "広範囲修正", price: 5000 }
+            ],
+            countOptions: [
+                { id: "props", name: "小物", price: 1000, unit: "点" },
+                { id: "face_diff", name: "表情差分", price: 500, unit: "種" },
+                { id: "pose_diff", name: "服装/ポーズ等大きな差分", price: 2000, unit: "種" },
+                { id: "rough", name: "ラフ複数案", price: 4500, unit: "案" },
+                { id: "retake", name: "リテイク(3回目以降)", price: 3000, unit: "回" }
+            ],
+            multipliers: [
+                { id: "nda", name: "実績公開不可 (+150%)", rate: 1.5 },
+                { id: "copyright", name: "著作権譲渡 (+100%)", rate: 1.0 }
+            ]
+        }
+    };
+
+    // 初期化
+    function init() {
+        updateForm();
+    }
+
+    // フォーム生成
+    function updateForm() {
+        const type = document.getElementById('serviceType').value;
+        const data = services[type];
+
+        // 基本プラン生成
+        const planContainer = document.getElementById('planContainer');
+        planContainer.innerHTML = '';
+        data.plans.forEach((plan, index) => {
+            const div = document.createElement('div');
+            div.className = 'radio-option';
+            div.innerHTML = `
+                <input type="radio" name="plan" value="${plan.price}" id="plan_${index}" ${index === 0 ? 'checked' : ''} onchange="calculate()">
+                <label for="plan_${index}" style="margin:0; flex-grow:1; cursor:pointer;">${plan.name}</label>
+                <span class="price-tag">¥${plan.price.toLocaleString()}</span>
+            `;
+            planContainer.appendChild(div);
+        });
+
+        // チェックボックスオプション生成
+        const optionsContainer = document.getElementById('optionsContainer');
+        optionsContainer.innerHTML = '';
+        if(data.options.length === 0) {
+            optionsContainer.innerHTML = '<p class="note">このカテゴリに固定オプションはありません</p>';
+        } else {
+            data.options.forEach(opt => {
+                const div = document.createElement('div');
+                div.className = 'checkbox-option';
+                div.innerHTML = `
+                    <input type="checkbox" class="option-check" value="${opt.price}" id="${opt.id}" onchange="calculate()">
+                    <label for="${opt.id}" style="margin:0; flex-grow:1; cursor:pointer;">${opt.name}</label>
+                    <span class="price-tag">+¥${opt.price.toLocaleString()}</span>
+                `;
+                optionsContainer.appendChild(div);
+            });
+        }
+
+        // 数量オプション生成
+        const numberContainer = document.getElementById('numberOptionsContainer');
+        numberContainer.innerHTML = '';
+        data.countOptions.forEach(opt => {
+            const div = document.createElement('div');
+            div.className = 'number-input-row';
+            div.innerHTML = `
+                <span>${opt.name} (+¥${opt.price.toLocaleString()} / ${opt.unit})</span>
+                <input type="number" class="count-option" data-price="${opt.price}" value="0" min="0" onchange="calculate()">
+            `;
+            numberContainer.appendChild(div);
+        });
+
+        // 権利・倍率オプション生成
+        const rightsContainer = document.getElementById('rightsContainer');
+        rightsContainer.innerHTML = '';
+        if(data.multipliers.length === 0) {
+            rightsContainer.innerHTML = '<p class="note">特定の権利オプション設定はありません</p>';
+        } else {
+            data.multipliers.forEach(mult => {
+                const div = document.createElement('div');
+                div.className = 'checkbox-option';
+                div.innerHTML = `
+                    <input type="checkbox" class="multiplier-check" value="${mult.rate}" id="${mult.id}" onchange="calculate()">
+                    <label for="${mult.id}" style="margin:0; flex-grow:1; cursor:pointer;">${mult.name}</label>
+                `;
+                rightsContainer.appendChild(div);
+            });
+        }
+
+        calculate();
+    }
+
+    // 計算ロジック
+    function calculate() {
+        let total = 0;
+
+        // 1. 基本料金 × 人数
+        const planPrice = parseInt(document.querySelector('input[name="plan"]:checked')?.value || 0);
+        const peopleCount = parseInt(document.getElementById('peopleCount').value || 1);
+        
+        let subTotal = planPrice * peopleCount;
+        
+        // 2. 固定オプション加算
+        document.querySelectorAll('.option-check:checked').forEach(el => {
+            subTotal += parseInt(el.value);
+        });
+
+        // 3. 数量オプション加算
+        document.querySelectorAll('.count-option').forEach(el => {
+            const count = parseInt(el.value || 0);
+            const price = parseInt(el.dataset.price);
+            subTotal += (count * price);
+        });
+
+        total = subTotal;
+
+        // 4. 倍率オプション加算（お見積り合計に対する％）
+        // ※「実績公開不可」と「著作権譲渡」が同時にチェックされた場合、それぞれ元の合計金額に対して計算して加算します
+        // 例: 合計1万, 公開不可(+100%), 著作権(+150%) => 1万 + 1万 + 1.5万 = 3.5万
+        
+        let additionalFee = 0;
+        document.querySelectorAll('.multiplier-check:checked').forEach(el => {
+            const rate = parseFloat(el.value);
+            additionalFee += (total * rate);
+        });
+
+        total += additionalFee;
+
+        // 表示更新
+        document.getElementById('totalPrice').innerText = Math.floor(total).toLocaleString();
+    }
+
+    // 開始
+    window.onload = init;
+</script>
+
+</body>
+</html>
