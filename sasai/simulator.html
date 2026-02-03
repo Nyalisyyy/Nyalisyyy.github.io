@@ -175,7 +175,7 @@
         <label>描画人数</label>
         <div class="number-input-row">
             <span>人数（基本料金 × 人数）</span>
-            <input type="number" id="peopleCount" value="1" min="1" onchange="calculate()">
+            <input type="number" id="peopleCount" value="1" min="1" oninput="calculate()">
         </div>
     </div>
 
@@ -245,7 +245,6 @@
                 { id: "face_diff", name: "表情差分", price: 500, unit: "種" },
                 { id: "pose_diff", name: "服装/ポーズ等大きな差分", price: 2000, unit: "種" }
             ],
-            // 一枚絵の項目には著作権譲渡等の記載が明記されていないため、標準では非表示または空にします
             multipliers: [] 
         },
         icon: {
@@ -322,9 +321,10 @@
         data.countOptions.forEach(opt => {
             const div = document.createElement('div');
             div.className = 'number-input-row';
+            // 修正箇所：onchangeをoninputに変更
             div.innerHTML = `
                 <span>${opt.name} (+¥${opt.price.toLocaleString()} / ${opt.unit})</span>
-                <input type="number" class="count-option" data-price="${opt.price}" value="0" min="0" onchange="calculate()">
+                <input type="number" class="count-option" data-price="${opt.price}" value="0" min="0" oninput="calculate()">
             `;
             numberContainer.appendChild(div);
         });
@@ -357,7 +357,8 @@
         const planPrice = parseInt(document.querySelector('input[name="plan"]:checked')?.value || 0);
         const peopleCount = parseInt(document.getElementById('peopleCount').value || 1);
         
-        let subTotal = planPrice * peopleCount;
+        // 入力途中で空のときは0とみなす処理（NaN対策）は既に入っています
+        let subTotal = planPrice * (isNaN(peopleCount) ? 0 : peopleCount);
         
         // 2. 固定オプション加算
         document.querySelectorAll('.option-check:checked').forEach(el => {
@@ -373,10 +374,7 @@
 
         total = subTotal;
 
-        // 4. 倍率オプション加算（お見積り合計に対する％）
-        // ※「実績公開不可」と「著作権譲渡」が同時にチェックされた場合、それぞれ元の合計金額に対して計算して加算します
-        // 例: 合計1万, 公開不可(+100%), 著作権(+150%) => 1万 + 1万 + 1.5万 = 3.5万
-        
+        // 4. 倍率オプション加算
         let additionalFee = 0;
         document.querySelectorAll('.multiplier-check:checked').forEach(el => {
             const rate = parseFloat(el.value);
