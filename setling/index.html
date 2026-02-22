@@ -1,0 +1,368 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <title>セトリング - 歌枠セトリ記録アプリ</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800&family=Noto+Sans+JP:wght@400;700;800&display=swap"
+      rel="stylesheet"
+    />
+
+    <script>
+      const manifest = {
+        name: "セトリング",
+        short_name: "セトリング",
+        display: "standalone",
+        background_color: "#ffffff",
+        theme_color: "#58CC02",
+        icons: [
+          {
+            src: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%2358CC02' rx='20'/><text y='65' x='15' font-size='60'>🎤</text></svg>",
+            sizes: "192x192",
+            type: "image/svg+xml",
+          },
+        ],
+      };
+      const link = document.createElement("link");
+      link.rel = "manifest";
+      link.href =
+        "data:application/json;charset=utf-8," +
+        encodeURIComponent(JSON.stringify(manifest));
+      document.head.appendChild(link);
+    </script>
+
+    <style>
+      body {
+        font-family: "Nunito", "Noto Sans JP", sans-serif;
+        background-color: #ffffff;
+        color: #3c3c3c;
+        -webkit-tap-highlight-color: transparent;
+      }
+      .duo-btn {
+        transition: all 0.1s ease;
+      }
+      .duo-btn:active:not(:disabled) {
+        transform: translateY(4px);
+        border-bottom-width: 0px;
+        margin-bottom: 4px;
+      }
+      .duo-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+      .duo-card {
+        border: 2px solid #e5e5e5;
+        border-radius: 1rem;
+        box-shadow: 0 4px 0 0 #e5e5e5;
+        background: white;
+      }
+      .duo-input:focus {
+        border-color: #1cb0f6;
+        outline: none;
+      }
+      ::-webkit-scrollbar {
+        display: none;
+      }
+    </style>
+  </head>
+  <body class="bg-[#F7F7F7] min-h-screen">
+    <div
+      id="app"
+      class="max-w-md mx-auto bg-white min-h-screen relative shadow-lg overflow-hidden flex flex-col"
+    >
+      <header
+        class="p-4 flex items-center justify-between border-b-2 border-gray-200 sticky top-0 bg-white z-10"
+      >
+        <h1
+          class="text-2xl font-extrabold text-[#58CC02] flex items-center gap-2"
+        >
+          <i class="fa-solid fa-microphone-lines"></i> セトリング
+        </h1>
+        <input
+          type="date"
+          v-model="currentDate"
+          class="font-bold text-gray-600 bg-gray-100 rounded-xl px-3 py-2 border-2 border-transparent duo-input cursor-pointer"
+        />
+      </header>
+
+      <main class="p-4 flex-grow overflow-y-auto pb-24">
+        <div class="mb-8">
+          <h2
+            class="text-lg font-bold mb-3 text-gray-700 flex items-center gap-2"
+          >
+            <i class="fa-solid fa-magnifying-glass text-[#1CB0F6]"></i> 曲を検索
+          </h2>
+          <div class="relative mb-4">
+            <input
+              type="text"
+              v-model="searchQuery"
+              placeholder="曲名やアーティスト名を入力..."
+              class="w-full border-2 border-gray-200 rounded-2xl pl-12 pr-4 py-3 font-bold text-gray-700 duo-input"
+            />
+            <div
+              class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"
+            >
+              <i class="fa-solid fa-search" v-if="!isSearching"></i>
+              <i class="fa-solid fa-spinner fa-spin text-[#1CB0F6]" v-else></i>
+            </div>
+          </div>
+
+          <div v-if="searchResults.length > 0" class="duo-card p-2 mb-6">
+            <ul class="max-h-48 overflow-y-auto">
+              <li
+                v-for="song in searchResults"
+                :key="song.trackId"
+                class="flex items-center justify-between p-2 hover:bg-gray-50 rounded-xl border-b-2 border-gray-100 last:border-0 group"
+              >
+                <div class="truncate pr-2 flex-grow">
+                  <div class="font-bold text-sm truncate">
+                    {{ song.trackName }}
+                  </div>
+                  <div class="text-xs text-gray-500 truncate">
+                    {{ song.artistName }}
+                  </div>
+                </div>
+                <button
+                  @click="addSong(song)"
+                  class="min-w-[40px] h-[40px] bg-[#58CC02] text-white rounded-xl border-b-4 border-[#58A700] duo-btn flex items-center justify-center flex-shrink-0"
+                >
+                  <i class="fa-solid fa-plus"></i>
+                </button>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <div>
+          <div class="flex items-center justify-between mb-3">
+            <h2 class="text-lg font-bold text-gray-700 flex items-center gap-2">
+              <i class="fa-solid fa-list-ol text-[#FF4B4B]"></i> {{
+              formattedDate }} のセトリ
+            </h2>
+            <span
+              class="text-sm font-bold bg-gray-100 px-3 py-1 rounded-full text-gray-500"
+            >
+              {{ currentSetlist.length }} 曲
+            </span>
+          </div>
+
+          <div v-if="currentSetlist.length > 0" class="flex gap-2 mb-4">
+            <button
+              @click="copySetlist"
+              class="flex-1 bg-gray-100 text-gray-700 font-bold py-2 px-4 rounded-xl border-b-4 border-gray-300 duo-btn flex items-center justify-center gap-2 text-sm"
+            >
+              <i class="fa-solid fa-copy"></i> テキストをコピー
+            </button>
+            <button
+              @click="shareToX"
+              class="flex-1 bg-black text-white font-bold py-2 px-4 rounded-xl border-b-4 border-gray-800 duo-btn flex items-center justify-center gap-2 text-sm"
+            >
+              <i class="fa-brands fa-x-twitter"></i> Xにポスト
+            </button>
+          </div>
+
+          <div
+            v-if="currentSetlist.length === 0"
+            class="duo-card p-8 text-center text-gray-400 font-bold border-dashed border-2"
+          >
+            <i class="fa-solid fa-music text-4xl mb-3 text-gray-300"></i>
+            <p>まだ曲が記録されていません<br />上の検索窓から追加しよう！</p>
+          </div>
+
+          <ul id="setlist-container" class="space-y-3">
+            <li
+              v-for="(song, index) in currentSetlist"
+              :key="song.id"
+              class="duo-card p-3 flex items-center bg-white group"
+            >
+              <div
+                class="handle cursor-grab active:cursor-grabbing p-2 text-gray-300 hover:text-gray-500 mr-2"
+              >
+                <i class="fa-solid fa-grip-vertical"></i>
+              </div>
+              <div class="font-extrabold text-[#CE82FF] w-6 mr-2">
+                {{ index + 1 }}
+              </div>
+              <div class="flex-grow truncate pr-2">
+                <div class="font-bold text-gray-800 truncate">
+                  {{ song.title }}
+                </div>
+                <div class="text-sm text-gray-500 truncate">
+                  {{ song.artist }}
+                </div>
+              </div>
+              <button
+                @click="removeSong(index)"
+                class="text-gray-300 hover:text-[#FF4B4B] p-2 transition-colors"
+              >
+                <i class="fa-solid fa-trash-can"></i>
+              </button>
+            </li>
+          </ul>
+        </div>
+      </main>
+    </div>
+
+    <script>
+      const { createApp, ref, computed, watch, onMounted, nextTick } = Vue;
+
+      createApp({
+        setup() {
+          const getTodayStr = () => {
+            const d = new Date();
+            const year = d.getFullYear();
+            const month = String(d.getMonth() + 1).padStart(2, "0");
+            const day = String(d.getDate()).padStart(2, "0");
+            return `${year}-${month}-${day}`;
+          };
+
+          const currentDate = ref(getTodayStr());
+          const searchQuery = ref("");
+          const searchResults = ref([]);
+          const isSearching = ref(false);
+          const setlists = ref({});
+          let searchTimeout = null; // デバウンス用タイマー
+
+          const currentSetlist = computed(
+            () => setlists.value[currentDate.value] || [],
+          );
+          const formattedDate = computed(() => {
+            const d = new Date(currentDate.value);
+            return `${d.getMonth() + 1}月${d.getDate()}日`;
+          });
+
+          // インクリメンタルサーチ (0.5秒のデバウンス処理付き)
+          watch(searchQuery, (newVal) => {
+            clearTimeout(searchTimeout); // 前のタイマーをキャンセル
+
+            if (!newVal.trim()) {
+              searchResults.value = [];
+              isSearching.value = false;
+              return;
+            }
+
+            isSearching.value = true;
+
+            // 入力が止まってから0.5秒後にAPIを叩く
+            searchTimeout = setTimeout(async () => {
+              try {
+                const res = await fetch(
+                  `https://itunes.apple.com/search?term=${encodeURIComponent(newVal)}&entity=song&country=jp&limit=15`,
+                );
+                const data = await res.json();
+                searchResults.value = data.results;
+              } catch (e) {
+                console.error("検索エラー", e);
+              } finally {
+                isSearching.value = false;
+              }
+            }, 500);
+          });
+
+          const addSong = (song) => {
+            if (!setlists.value[currentDate.value])
+              setlists.value[currentDate.value] = [];
+            setlists.value[currentDate.value].push({
+              id: Date.now() + Math.random().toString(36).substr(2, 9),
+              title: song.trackName,
+              artist: song.artistName,
+            });
+            // 追加後、検索窓をリセット
+            searchQuery.value = "";
+            searchResults.value = [];
+          };
+
+          const removeSong = (index) => {
+            if (confirm("この曲を削除しますか？")) {
+              setlists.value[currentDate.value].splice(index, 1);
+            }
+          };
+
+          // --- シェア・テキスト書き出し機能 ---
+          const generateSetlistText = () => {
+            let text = `🎤 ${formattedDate.value} のセトリ\n\n`;
+            currentSetlist.value.forEach((song, i) => {
+              text += `${i + 1}. ${song.title} / ${song.artist}\n`;
+            });
+            text += `\n#セトリング`;
+            return text;
+          };
+
+          const copySetlist = async () => {
+            const text = generateSetlistText();
+            try {
+              await navigator.clipboard.writeText(text);
+              alert("セトリをクリップボードにコピーしました！");
+            } catch (err) {
+              alert("コピーに失敗しました。");
+            }
+          };
+
+          const shareToX = () => {
+            const text = generateSetlistText();
+            const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
+            window.open(url, "_blank");
+          };
+
+          // --- 保存・並び替え ---
+          const saveData = () =>
+            localStorage.setItem(
+              "setling_data",
+              JSON.stringify(setlists.value),
+            );
+
+          const initSortable = () => {
+            const el = document.getElementById("setlist-container");
+            if (el) {
+              Sortable.create(el, {
+                handle: ".handle",
+                animation: 150,
+                ghostClass: "opacity-50",
+                onEnd: (evt) => {
+                  const list = setlists.value[currentDate.value];
+                  const item = list.splice(evt.oldIndex, 1)[0];
+                  list.splice(evt.newIndex, 0, item);
+                  saveData();
+                },
+              });
+            }
+          };
+
+          onMounted(() => {
+            const saved = localStorage.getItem("setling_data");
+            if (saved) setlists.value = JSON.parse(saved);
+            nextTick(() => initSortable());
+          });
+
+          watch(setlists, () => saveData(), { deep: true });
+          watch(currentDate, () => nextTick(() => initSortable()));
+
+          return {
+            currentDate,
+            searchQuery,
+            searchResults,
+            isSearching,
+            currentSetlist,
+            formattedDate,
+            addSong,
+            removeSong,
+            copySetlist,
+            shareToX,
+          };
+        },
+      }).mount("#app");
+    </script>
+  </body>
+</html>
